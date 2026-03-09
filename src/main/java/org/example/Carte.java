@@ -1,4 +1,6 @@
-public class carte {
+package org.example;
+
+public class Carte {
     private String nom;
     private String type;
     private String[] themes;
@@ -8,5 +10,4 @@ public class carte {
     private float[] prix;
     private float[] frequentations;
     private String description_lieu;
-
 }

@@ -12,7 +12,7 @@ public class Booster {
     private List<Integer> idsTires = new ArrayList<>();
 
     public Booster() {
-        String sql = "SELECT nom_officiel, domaine_thematique, histoire, adresse, ville, interet " +
+        String sql = "SELECT identifiant,nom_officiel, domaine_thematique, histoire, adresse, ville, interet " +
                 "FROM public.musee " +
                 "ORDER BY RANDOM() " +
                 "LIMIT 5";

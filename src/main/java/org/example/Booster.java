@@ -23,12 +23,12 @@ public class Booster {
 
             while (rs.next()) {
                 Carte c = new Carte(
-                        rs.getString("nom_officiel"),      // nom
-                        rs.getString("domaine_thematique"), // type
-                        rs.getString("histoire"),           // description
-                        rs.getString("adresse"),            // localisation
-                        rs.getString("ville"),              // ville
-                        rs.getString("interet")             // description_lieu
+                        rs.getString("nom_officiel"),
+                        rs.getString("domaine_thematique"),
+                        rs.getString("histoire"),
+                        rs.getString("adresse"),
+                        rs.getString("ville"),
+                        rs.getString("interet")
                 );
                 idsTires.add(rs.getInt("identifiant"));
                 cartes.add(c);

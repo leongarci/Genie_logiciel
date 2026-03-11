@@ -1,9 +1,12 @@
 package org.example;
 
+import org.example.Interface.Interface;
+
 import java.util.Scanner;
 
 public class Main {
     static void main() {
+        new Interface();
         Scanner scanner = new Scanner(System.in);
         AuthService authService = new AuthService();
 
@@ -33,5 +36,6 @@ public class Main {
             System.out.println("Accès refusé. Fin du programme.");
         }
 
-        scanner.close();    }
+        scanner.close();
+    }
 }

@@ -41,14 +41,14 @@ public class Login extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 AuthService authService = new AuthService();
-                int res = -1;
+                User us = null;
                 if (login) {
-                    res = authService.login(user.getText(), pass.getText());
+                    us = authService.login(user.getText(), pass.getText());
                 }else {
-                    res = authService.register(user.getText(), pass.getText());
+                    us = authService.inscrireUtilisateur(user.getText(), pass.getText());
                 }
-                if (res != -1) {
-                    anInterface.setUser(new User(res, user.getText()));
+                if (us != null) {
+                    anInterface.setUser(us);
                     anInterface.show("HOME");
                 }else {
                     err = texte(50, 250, 220, 30, "Username ou password incorrect", err);

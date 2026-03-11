@@ -24,7 +24,7 @@ public class Interface {
 
             Login login = new Login(this, Paths.get("src/main/java/org/example/Interface/Page/login.jpg").toAbsolutePath().normalize());
             mainContentPanel.add(login, "LOGIN");
-            Home home = new Home(this, null);
+            Home home = new Home(this, null, user);
             mainContentPanel.add(home, "HOME");
 
             FlexibleModernWindow mainWindow = new FlexibleModernWindow("Mon Appli", mainContentPanel, theme, 850, 600, null, false);

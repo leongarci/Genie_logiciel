@@ -610,7 +610,7 @@ public class FlexibleModernWindow extends JFrame {
         }
     }
 
-    private static class RoundedPopupBorder implements Border {
+    public static class RoundedPopupBorder implements Border {
         private final Color color; private final int radius;
         public RoundedPopupBorder(Color color, int radius) { this.color = color; this.radius = radius; }
         @Override public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {

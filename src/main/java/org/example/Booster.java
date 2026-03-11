@@ -39,27 +39,25 @@ public class Booster {
     }
 
     public void enregistrerPourUtilisateur(int userId) {
-        // Requête PostgreSQL "UPSERT" : Si conflit sur la clé primaire, on incrémente la quantité
         String sql = "INSERT INTO public.collection (user_id, musee_id, quantite) " +
                 "VALUES (?, ?, 1) " +
                 "ON CONFLICT (user_id, musee_id) " +
                 "DO UPDATE SET quantite = public.collection.quantite + 1";
 
         try (Connection conn = DatabaseConfig.getConnection()) {
-            // Désactiver l'auto-commit pour faire une transaction (plus propre et rapide)
             conn.setAutoCommit(false);
 
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 for (int museeId : idsTires) {
                     pstmt.setInt(1, userId);
                     pstmt.setInt(2, museeId);
-                    pstmt.addBatch(); // On prépare les 5 commandes d'un coup
+                    pstmt.addBatch();
                 }
-                pstmt.executeBatch(); // On envoie tout au serveur
-                conn.commit();        // On valide la transaction
+                pstmt.executeBatch();
+                conn.commit();
                 System.out.println("Collection mise à jour pour l'utilisateur " + userId);
             } catch (SQLException e) {
-                conn.rollback(); // En cas d'erreur, on annule tout
+                conn.rollback();
                 throw e;
             }
 

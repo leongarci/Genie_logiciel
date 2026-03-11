@@ -1,28 +1,40 @@
 package org.example;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import org.mindrot.jbcrypt.BCrypt;
+
+import java.sql.*;
 
 public class AuthService {
 
-    public void register(String login, String mdp) {
-        String sql = "INSERT INTO users (login, mdp) VALUES (?, ?)";
+    public int register(String login, String motDePasseClair) {
+        String mdpHache = BCrypt.hashpw(motDePasseClair, BCrypt.gensalt());
+
+        String sql = "INSERT INTO public.users (login, mdp) VALUES (?, ?)";
 
         try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, login);
-            pstmt.setString(2, mdp);
+            pstmt.setString(2, mdpHache);
 
-            int rowsInserted = pstmt.executeUpdate();
-            if (rowsInserted > 0) {
-                System.out.println("L'utilisateur a été inséré avec succès !");
+            int lignesAffectees = pstmt.executeUpdate();
+
+            if (lignesAffectees > 0) {
+                try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int nouvelId = rs.getInt(1);
+                        System.out.println("Inscription réussie Nouvel ID : " + nouvelId);
+                        return nouvelId;
+                    }
+                }
             }
         } catch (SQLException e) {
-            System.err.println("Erreur lors de la connexion : " + e.getMessage());
+            System.err.println("Erreur lors de l'inscription : " + e.getMessage());
+            if(e.getSQLState().equals("23505")) {
+                System.err.println("Ce pseudo est déjà pris");
+            }
         }
+        return -1;
     }
 
     public int login(String pseudo, String motDePasseSaisi) {
@@ -35,10 +47,10 @@ public class AuthService {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                String mdpEnBase = rs.getString("mdp");
+                String mdpHacheEnBase = rs.getString("mdp");
                 int userId = rs.getInt("id");
 
-                if (mdpEnBase.equals(motDePasseSaisi)) {
+                if (BCrypt.checkpw(motDePasseSaisi, mdpHacheEnBase)) {
                     System.out.println("Connexion réussie " + pseudo);
                     return userId;
                 } else {

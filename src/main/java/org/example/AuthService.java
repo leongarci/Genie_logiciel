@@ -6,7 +6,7 @@ import java.sql.*;
 
 public class AuthService {
 
-    public int register(String login, String motDePasseClair) {
+    public User inscrireUtilisateur(String login, String motDePasseClair) {
         String mdpHache = BCrypt.hashpw(motDePasseClair, BCrypt.gensalt());
 
         String sql = "INSERT INTO public.users (login, mdp) VALUES (?, ?)";
@@ -23,21 +23,23 @@ public class AuthService {
                 try (ResultSet rs = pstmt.getGeneratedKeys()) {
                     if (rs.next()) {
                         int nouvelId = rs.getInt(1);
-                        System.out.println("Inscription réussie Nouvel ID : " + nouvelId);
-                        return nouvelId;
+                        System.out.println("Inscription réussie " + login);
+                        return new User(nouvelId, login);
                     }
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Erreur lors de l'inscription : " + e.getMessage());
-            if(e.getSQLState().equals("23505")) {
-                System.err.println("Ce pseudo est déjà pris");
+            if (e.getSQLState().equals("23505")) {
+                System.out.println("Ce pseudo est déjà pris.");
+            } else {
+                System.err.println("Erreur lors de l'inscription : " + e.getMessage());
             }
         }
-        return -1;
+
+        return null;
     }
 
-    public int login(String pseudo, String motDePasseSaisi) {
+    public User login(String pseudo, String motDePasseSaisi) {
         String sql = "SELECT id, mdp FROM public.users WHERE login = ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
@@ -51,20 +53,19 @@ public class AuthService {
                 int userId = rs.getInt("id");
 
                 if (BCrypt.checkpw(motDePasseSaisi, mdpHacheEnBase)) {
-                    System.out.println("Connexion réussie " + pseudo);
-                    return userId;
+                    System.out.println("Connexion réussie");
+                    return new User(userId, pseudo);
                 } else {
                     System.out.println("Mot de passe incorrect.");
-                    return -1;
                 }
             } else {
                 System.out.println("Utilisateur introuvable.");
-                return -1;
             }
 
         } catch (SQLException e) {
             System.err.println("Erreur lors de la connexion : " + e.getMessage());
-            return -1;
         }
+
+        return null;
     }
 }

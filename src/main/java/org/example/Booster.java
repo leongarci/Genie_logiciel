@@ -8,10 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Booster {
+    private User user;
     private List<Carte> cartes = new ArrayList<>();
     private List<Integer> idsTires = new ArrayList<>();
 
-    public Booster() {
+    public Booster(User user) {
+        this.user=user;
+        genererCartes();
+    }
+
+    private void genererCartes() {
         String sql = "SELECT identifiant,nom_officiel, domaine_thematique, histoire, adresse, ville, interet " +
                 "FROM public.musee " +
                 "ORDER BY RANDOM() " +
@@ -38,7 +44,12 @@ public class Booster {
         }
     }
 
-    public void enregistrerPourUtilisateur(int userId) {
+    public void enregistrerPourUtilisateur(User joueur) {
+        if (joueur == null) {
+            System.err.println("Erreur : Impossible d'enregistrer le booster, aucun joueur n'est connecté.");
+            return;
+        }
+
         String sql = "INSERT INTO public.collection (user_id, musee_id, quantite) " +
                 "VALUES (?, ?, 1) " +
                 "ON CONFLICT (user_id, musee_id) " +
@@ -48,21 +59,24 @@ public class Booster {
             conn.setAutoCommit(false);
 
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
                 for (int museeId : idsTires) {
-                    pstmt.setInt(1, userId);
+                    pstmt.setInt(1, joueur.getId());
                     pstmt.setInt(2, museeId);
+
                     pstmt.addBatch();
                 }
+
                 pstmt.executeBatch();
                 conn.commit();
-                System.out.println("Collection mise à jour pour l'utilisateur " + userId);
+
             } catch (SQLException e) {
                 conn.rollback();
                 throw e;
             }
 
         } catch (SQLException e) {
-            System.err.println("Erreur sauvegarde collection : " + e.getMessage());
+            System.err.println("Erreur lors de la sauvegarde de la collection : " + e.getMessage());
         }
     }
 

@@ -9,7 +9,7 @@ public class CollectionService {
     public List<CartePossedee> getCollectionUtilisateur(int userId) {
         List<CartePossedee> maCollection = new ArrayList<>();
 
-        String sql = "SELECT m.nom_officiel, m.ville, m.domaine_thematique, c.quantite " +
+        String sql = "SELECT m.identifiant,m.nom_officiel, m.ville, m.domaine_thematique, c.quantite " +
                 "FROM public.collection c " +
                 "JOIN public.musee m ON c.musee_id = m.identifiant " +
                 "WHERE c.user_id = ?";
@@ -22,9 +22,13 @@ public class CollectionService {
 
             while (rs.next()) {
                 Carte carte = new Carte(
+                        rs.getInt("identifiant"),
                         rs.getString("nom_officiel"),
+                        rs.getString("ville"),
                         rs.getString("domaine_thematique"),
-                        "", "", rs.getString("ville"), ""
+                        rs.getString("histoire"),
+                        rs.getString("atout"),
+                        rs.getString("interet")
                 );
 
                 int quantite = rs.getInt("quantite");

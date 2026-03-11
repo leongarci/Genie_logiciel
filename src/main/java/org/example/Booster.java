@@ -29,6 +29,7 @@ public class Booster {
 
             while (rs.next()) {
                 Carte c = new Carte(
+                        rs.getInt("id"),
                         rs.getString("nom_officiel"),
                         rs.getString("domaine_thematique"),
                         rs.getString("histoire"),

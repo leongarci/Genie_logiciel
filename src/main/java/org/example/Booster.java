@@ -1,83 +1,49 @@
 package org.example;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Booster {
-    private User user;
     private List<Carte> cartes = new ArrayList<>();
     private List<Integer> idsTires = new ArrayList<>();
 
-    public Booster(User user) {
-        this.user=user;
+    private MuseeDAO museeDAO = new MuseeDAO();
+    private CollectionDAO collectionDAO = new CollectionDAO();
+
+    public Booster() {
         genererCartes();
     }
 
     private void genererCartes() {
-        String sql = "SELECT identifiant,nom_officiel, domaine_thematique, histoire, adresse, ville, interet " +
-                "FROM public.musee " +
-                "ORDER BY RANDOM() " +
-                "LIMIT 5";
+        Random rand = new Random();
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+        for (int i = 0; i < 5; i++) {
+            int roll = rand.nextInt(100);
+            Rarete rareteTiree;
 
-            while (rs.next()) {
-                Carte c = new Carte(
-                        rs.getInt("id"),
-                        rs.getString("nom_officiel"),
-                        rs.getString("domaine_thematique"),
-                        rs.getString("histoire"),
-                        rs.getString("adresse"),
-                        rs.getString("ville"),
-                        rs.getString("interet")
-                );
-                idsTires.add(rs.getInt("identifiant"));
-                cartes.add(c);
+            if (roll < 70) {
+                rareteTiree = Rarete.COMMUN;
+            } else if (roll < 90) {
+                rareteTiree = Rarete.RARE;
+            } else if (roll < 98) {
+                rareteTiree = Rarete.EPIQUE;
+            } else {
+                rareteTiree = Rarete.LEGENDAIRE;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+            Carte c = museeDAO.getRandomCarteByRarete(rareteTiree);
+            //System.out.println(c.toString());
+            if (c != null) {
+                cartes.add(c);
+                idsTires.add(c.getIdentifiant());
+            }
         }
     }
 
-    public void enregistrerPourUtilisateur(User joueur) {
-        if (joueur == null) {
-            System.err.println("Erreur : Impossible d'enregistrer le booster, aucun joueur n'est connecté.");
-            return;
-        }
-
-        String sql = "INSERT INTO public.collection (user_id, musee_id, quantite) " +
-                "VALUES (?, ?, 1) " +
-                "ON CONFLICT (user_id, musee_id) " +
-                "DO UPDATE SET quantite = public.collection.quantite + 1";
-
-        try (Connection conn = DatabaseConfig.getConnection()) {
-            conn.setAutoCommit(false);
-
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-                for (int museeId : idsTires) {
-                    pstmt.setInt(1, joueur.getId());
-                    pstmt.setInt(2, museeId);
-
-                    pstmt.addBatch();
-                }
-
-                pstmt.executeBatch();
-                conn.commit();
-
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Erreur lors de la sauvegarde de la collection : " + e.getMessage());
+    public void ouvrirBooster(User joueur) {
+        if (joueur != null && !idsTires.isEmpty()) {
+            collectionDAO.ajouterCartes(joueur.getId(), idsTires);
         }
     }
 

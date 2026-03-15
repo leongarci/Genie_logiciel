@@ -25,11 +25,9 @@ public class Carte {
     private Integer groupesHorsScolaires;
     private Integer moins18AnsHorsScolaires;
     private Integer de18A25Ans;
+    private Rarete rarete;
 
-    /**
-     * Constructeur principal (tu pourras en créer d'autres plus petits si besoin)
-     */
-    public Carte(int identifiant, String nomOfficiel, String ville, String domaineThematique, String histoire, String atout, String interet) {
+    public Carte(int identifiant, String nomOfficiel, String ville, String domaineThematique, String histoire, String atout, String interet,Rarete rarete) {
         this.identifiant = identifiant;
         this.nomOfficiel = nomOfficiel;
         this.ville = ville;
@@ -37,9 +35,9 @@ public class Carte {
         this.histoire = histoire;
         this.atout = atout;
         this.interet = interet;
+        this.rarete = rarete;
     }
 
-    // --- GETTERS (À générer avec ton IDE pour tous les attributs si besoin) ---
     public int getIdentifiant() { return identifiant; }
     public String getNomOfficiel() { return nomOfficiel; }
     public String getVille() { return ville; }
@@ -213,5 +211,13 @@ public class Carte {
     @Override
     public String toString() {
         return "Carte: " + nomOfficiel + " (" + ville + ") - Type: " + domaineThematique;
+    }
+
+    public Rarete getRarete() {
+        return rarete;
+    }
+
+    public void setRarete(Rarete rarete) {
+        this.rarete = rarete;
     }
 }

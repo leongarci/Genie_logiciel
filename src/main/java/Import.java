@@ -75,7 +75,6 @@ public class Import {
             System.out.println("ça sort");
             readerMain.close();
 
-            //VISITEURS
             CSVReader readerVisitors = new CSVReaderBuilder(new FileReader(VISITORS_DATA)).withCSVParser(parser).build();
             List<String[]> visitors = new ArrayList<>();
             String[] headersVisitors = readerVisitors.readNext();
@@ -129,7 +128,6 @@ public class Import {
                 }
             }
 
-            // Écriture des données filtrées dans un nouveau fichier CSV
             CSVWriter writer = new CSVWriter(new FileWriter("data/formatted_museums.csv"));
             writer.writeNext(FINAL_FIELDS);
             for (String[] museum : finalMuseums) {
@@ -144,6 +142,4 @@ public class Import {
 
     }
 }
-//récupérer themes, premier devient main theme, les autres sont secondaires
 
-//truc avec les départements et régions faut retirer 00- 

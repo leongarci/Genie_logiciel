@@ -19,14 +19,12 @@ public class Import {
 
     private static final String[] MUSEUM_FIELDS = {"identifiant", "nom_officiel", "adresse", "lieu", "code_postal", "ville", "region", "departement", "domaine_thematique", "histoire", "atout", "interet", "annee_creation", "coordonnees"};
     private static final String[] VISITORS_FIELDS = {"idmuseofile", "annee", "payant", "gratuit", "total", "individuel", "scolaires", "groupes_hors_scolaires", "moins_18_ans_hors_scolaires", "_18_25_ans"};
-    private static final String[] POPULATION_FIELDS = {"dep_l", "newreg_l", "Pop", "trage"};
     private static final String[] FINAL_FIELDS = Stream.concat(Arrays.stream(MUSEUM_FIELDS), Arrays.stream(VISITORS_FIELDS)).toArray(String[]::new);
     private static final String MAIN_DATA = "data/musees-de-france-base-museofile.csv";
     private static final String VISITORS_DATA = "data/ENTREES_ET_CATEGORIES_DE_PUBLIC.csv";
-    private static final String POPULATION_DATA = "data/pop_dep_age_sexe.csv";
+    private static final String OUTPUT_DATA = "data/formatted_museums.csv";
 
     public static void formatGlobal() {
-
         try {
             CSVParser parser = new CSVParserBuilder().withSeparator(';').withIgnoreQuotations(true).withStrictQuotes(false)
                     .withIgnoreLeadingWhiteSpace(true).build();
@@ -51,7 +49,6 @@ public class Import {
             String[] lineMain;
             while ((lineMain = readerMain.readNext()) != null) {
                 if (lineMain.length < headersMain.length) {
-                    System.out.println("Ligne ignorée (nombre de colonnes insuffisant): " + Arrays.toString(lineMain));
                     continue;
                 }
                 if ("".equals(lineMain[headerIndexMain.get("domaine_thematique")])) {
@@ -65,14 +62,10 @@ public class Import {
                     if (filteredLine[i] == null) {
                         filteredLine[i] = "";
                     }
-                    filteredLine[i] = filteredLine[i].replaceAll("(?<!^)(?<!;)\"(?!;)(?!$)", "");
                 }
 
                 museums.add(filteredLine);
-                //System.out.println("Museum ID: " + filteredLine[0] + ", " + filteredLine[1] + " N°: " + museums.size());
-                //System.out.println("----");
             }
-            System.out.println("ça sort");
             readerMain.close();
 
             CSVReader readerVisitors = new CSVReaderBuilder(new FileReader(VISITORS_DATA)).withCSVParser(parser).build();
@@ -94,7 +87,7 @@ public class Import {
             while ((lineVisitors = readerVisitors.readNext()) != null) {
                 try {
 
-                    if (Integer.parseInt(lineVisitors[headerIndexVisitors.get("total")]) == 0) {
+                    if (lineVisitors[headerIndexVisitors.get("total")] == null || Integer.parseInt(lineVisitors[headerIndexVisitors.get("total")]) == 0) {
                         continue;
                     }
                     if (Integer.parseInt(lineVisitors[headerIndexVisitors.get("annee")]) != 2023) {
@@ -107,7 +100,6 @@ public class Import {
                         if (filteredLine[i] == null) {
                             filteredLine[i] = "";
                         }
-                        filteredLine[i] = filteredLine[i].replaceAll("(?<!^)(?<!;)\"(?!;)(?!$)", "");
                     }
                     visitors.add(filteredLine);
                 } catch (Exception e) {
@@ -121,14 +113,13 @@ public class Import {
             for (String[] museum : museums) {
                 String id = museum[0];
                 String[] visitorData = visitors.stream().filter(v -> v[0].equals(id)).findFirst().orElse(null);
+                System.out.println(Arrays.toString(visitorData));
                 if (visitorData != null) {
                     finalMuseums.add(Stream.concat(Arrays.stream(museum), Arrays.stream(visitorData)).toArray(String[]::new));
-                } else {
-                    finalMuseums.add(Stream.concat(Arrays.stream(museum), Stream.generate(() -> "").limit(VISITORS_FIELDS.length)).toArray(String[]::new));
                 }
             }
 
-            CSVWriter writer = new CSVWriter(new FileWriter("data/formatted_museums.csv"));
+            CSVWriter writer = new CSVWriter(new FileWriter(OUTPUT_DATA));
             writer.writeNext(FINAL_FIELDS);
             for (String[] museum : finalMuseums) {
                 writer.writeNext(museum);
@@ -139,7 +130,5 @@ public class Import {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 }
-

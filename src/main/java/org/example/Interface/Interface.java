@@ -22,9 +22,9 @@ public class Interface {
             mainContentPanel = new JPanel(cardLayout);
             mainContentPanel.setOpaque(false);
 
-            Login login = new Login(this, Paths.get("src/main/java/org/example/Interface/Page/login.jpg").toAbsolutePath().normalize());
+            Login login = new Login(this, Paths.get("src/main/java/org/example/Interface/Page/Background/login.png").toAbsolutePath().normalize());
             mainContentPanel.add(login, "LOGIN");
-            Home home = new Home(this, null, user);
+            Home home = new Home(this, Paths.get("src/main/java/org/example/Interface/Page/Background/home.png").toAbsolutePath().normalize());
             mainContentPanel.add(home, "HOME");
 
             FlexibleModernWindow mainWindow = new FlexibleModernWindow("Mon Appli", mainContentPanel, theme, 850, 600, null, false);

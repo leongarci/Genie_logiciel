@@ -8,10 +8,7 @@ import org.example.User;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,8 +18,25 @@ public class Login extends JPanel {
     private BufferedImage back;
     private JLabel err = null;
     private boolean login = true;
+
+    // Composants
+    private JTextField userField;
+    private JTextField passField;
+    private JButton mainButton;
+    private JButton switchButton;
+
+    // CONSTANTES DE STYLE
+    private final Color BACKGROUND_COLOR = new Color(0, 52, 21);
+    private final Color BACKGROUND_MODAL_COLOR = new Color(86, 86, 86);
+    private final Color MODAL_COLOR = new Color(0, 0, 0);
+    private final Color TEXT_MODAL_COLOR = new Color(255, 255, 255);
+
+    private final int WIDTH_MODAL = 400;
+    private final int HEIGHT_MODAL = 400; // Augmenté pour laisser de la place
+    private final int PADDING_MODAL = 3;
+
     public Login(Interface anInterface, Path pathBackground) {
-        super(null);
+        super(null); // Layout null pour positionnement manuel dynamique
         this.anInterface = anInterface;
 
         if (pathBackground != null) {
@@ -33,79 +47,127 @@ public class Login extends JPanel {
             }
         }
 
-        JTextField user = textBox(50, 50, 200, 30, "username");
-        JTextField pass = textBox(50, 100, 200, 30, "password");
-        JButton button = button(50, 150, 200, 30, "Se connecter");
-        JButton sw = button (50, 200, 200, 30, "S’inscrire");
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                AuthService authService = new AuthService();
-                User us = null;
-                if (login) {
-                    us = authService.login(user.getText(), pass.getText());
-                }else {
-                    us = authService.inscrireUtilisateur(user.getText(), pass.getText());
-                }
-                if (us != null) {
-                    anInterface.setUser(us);
-                    anInterface.show("HOME");
-                }else {
-                    err = texte(50, 250, 220, 30, "Username ou password incorrect", err);
-                    revalidate();
-                    repaint();
-                }
+        // Initialisation des composants
+        userField = textBox("username");
+        passField = textBox("password");
+        mainButton = button("Se connecter");
+        switchButton = button("S’inscrire");
+
+        // Action du bouton principal (Login/Register)
+        mainButton.addActionListener(e -> {
+            AuthService authService = new AuthService();
+            User us = login ? authService.login(userField.getText(), passField.getText())
+                    : authService.inscrireUtilisateur(userField.getText(), passField.getText());
+
+            if (us != null) {
+                anInterface.setUser(us);
+                anInterface.show("HOME");
+            } else {
+                err = texte("Identifiants incorrects", err);
+                repositionnerComposants(); // Replacer l'erreur au bon endroit
             }
         });
 
-        sw.addActionListener(new ActionListener() {
+        // Action pour switcher entre Connexion et Inscription
+        switchButton.addActionListener(e -> {
+            login = !login;
+            if (!login) {
+                switchButton.setText("Se connecter");
+                mainButton.setText("Créer un compte");
+            } else {
+                switchButton.setText("S’inscrire");
+                mainButton.setText("Se connecter");
+            }
+            repaint(); // Pour mettre à jour le titre "Connexion" dessiné
+        });
+
+        // Rendre l'interface responsive
+        this.addComponentListener(new ComponentAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                if (login) {
-                    sw.setText("Se connecter");
-                    button.setText("Créé un compte");
-                    login = !login;
-                }else {
-                    sw.setText("S’inscrire");
-                    button.setText("Se connecter");
-                    login = !login;
-                }
+            public void componentResized(ComponentEvent e) {
+                repositionnerComposants();
             }
         });
+    }
+
+    /**
+     * Calcule la position de chaque élément en fonction de la taille actuelle de la fenêtre
+     */
+    private void repositionnerComposants() {
+        int centerX = getWidth() / 2;
+        int modalY = (getHeight() - HEIGHT_MODAL) / 2;
+
+        int fieldWidth = 250;
+        int fieldHeight = 35;
+        int startY = modalY + 110; // Commence après le titre "Connexion"
+
+        userField.setBounds(centerX - (fieldWidth / 2), startY, fieldWidth, fieldHeight);
+        passField.setBounds(centerX - (fieldWidth / 2), startY + 50, fieldWidth, fieldHeight);
+        mainButton.setBounds(centerX - (fieldWidth / 2), startY + 110, fieldWidth, fieldHeight);
+        switchButton.setBounds(centerX - (fieldWidth / 2), startY + 160, fieldWidth, fieldHeight);
+
+        if (err != null) {
+            err.setBounds(centerX - (fieldWidth / 2), startY + 210, fieldWidth, fieldHeight);
+        }
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (back != null) {
-            g.drawImage(back, 0, 0, getWidth(), getHeight(), this);
-        }
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Fond
+        g2d.setColor(BACKGROUND_COLOR);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        // Dessin de la modal
+        int x = (getWidth() - WIDTH_MODAL) / 2;
+        int y = (getHeight() - HEIGHT_MODAL) / 2;
+
+        g2d.setColor(BACKGROUND_MODAL_COLOR);
+        g2d.fillRoundRect(x, y, WIDTH_MODAL, HEIGHT_MODAL, 30, 30);
+
+        g2d.setColor(MODAL_COLOR);
+        g2d.fillRoundRect(x + PADDING_MODAL, y + PADDING_MODAL,
+                WIDTH_MODAL - PADDING_MODAL*2, HEIGHT_MODAL - PADDING_MODAL*2, 25, 25);
+
+        // Titre dynamique
+        g2d.setColor(TEXT_MODAL_COLOR);
+        Font police = new Font("Arial", Font.BOLD, 26);
+        g2d.setFont(police);
+        String titre = login ? "Connexion" : "Inscription";
+        FontMetrics metrics = g2d.getFontMetrics(police);
+        g2d.drawString(titre, x + ((WIDTH_MODAL - metrics.stringWidth(titre)) / 2), y + 50);
+
+        // Lignes de décoration
+        g2d.setStroke(new BasicStroke(2f));
+        g2d.setColor(new Color(255, 255, 255, 50)); // Blanc semi-transparent
+        g2d.drawLine(x + 50, y + 70, x + WIDTH_MODAL - 50, y + 70);
     }
 
-    public JTextField textBox(int x, int y, int w, int h, String placeHolder) {
-        JTextField textField;
-        textField = new JTextField(placeHolder);
-        textField.setBounds(x, y, w, h);
+    // --- Méthodes utilitaires pour créer les composants ---
+
+    public JTextField textBox(String placeHolder) {
+        JTextField textField = new JTextField(placeHolder);
         textField.setOpaque(false);
-        textField.setBorder(BorderFactory.createCompoundBorder(
-                new FlexibleModernWindow.RoundedPopupBorder(Color.BLACK, 10),
-                BorderFactory.createEmptyBorder(2, 10, 2, 10)
-        ));
-        textField.setForeground(Color.DARK_GRAY);
-        textField.setFocusable(true);
+        textField.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, Color.WHITE));
+        textField.setForeground(Color.GRAY);
+        textField.setCaretColor(Color.WHITE);
+
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
                 if (textField.getText().equals(placeHolder)){
                     textField.setText("");
-                    textField.setForeground(Color.BLACK);
+                    textField.setForeground(Color.WHITE);
                 }
             }
-
             @Override
             public void focusLost(FocusEvent e) {
                 if (textField.getText().isEmpty()) {
-                    textField.setForeground(Color.DARK_GRAY); textField.setText(placeHolder);
+                    textField.setForeground(Color.GRAY);
+                    textField.setText(placeHolder);
                 }
             }
         });
@@ -113,40 +175,26 @@ public class Login extends JPanel {
         return textField;
     }
 
-    public JButton button(int x, int y, int w, int h, String placeHolder) {
-        JButton button;
-        button = new JButton(placeHolder);
-        button.setBounds(x, y, w, h);
-        button.setOpaque(false);
-        button.setBackground(new Color(0, 0, 0, 0));
-        button.setBorder(BorderFactory.createCompoundBorder(
-                new FlexibleModernWindow.RoundedPopupBorder(Color.BLACK, 10),
-                BorderFactory.createEmptyBorder(2, 10, 2, 10)
-        ));
-        button.setForeground(Color.BLACK);
-        button.setFocusable(true);
+    public JButton button(String text) {
+        JButton button = new JButton(text);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setFocusPainted(false);
+        button.setBackground(new Color(40, 40, 40));
+        button.setForeground(Color.WHITE);
+        button.setBorder(BorderFactory.createLineBorder(Color.WHITE, 1));
         this.add(button);
         return button;
     }
 
-    public JLabel texte(int x, int y, int w, int h, String placeHolder, JLabel texte) {
-        JLabel newtext;
-        if (texte != null) {
-            newtext = texte;
-        }else {
-            newtext = new JLabel(placeHolder);
-            newtext.setBackground(new Color(.8f, 0, 0, .5f));
-            newtext.setOpaque(true);
-            newtext.setBorder(BorderFactory.createCompoundBorder(
-                    new FlexibleModernWindow.RoundedPopupBorder(Color.RED, 10),
-                    BorderFactory.createEmptyBorder(2, 10, 2, 10)
-            ));
-            newtext.setForeground(Color.WHITE);
-            this.add(newtext);
+    public JLabel texte(String content, JLabel labelInstance) {
+        if (labelInstance == null) {
+            labelInstance = new JLabel(content, SwingConstants.CENTER);
+            labelInstance.setBackground(new Color(150, 0, 0, 200));
+            labelInstance.setOpaque(true);
+            labelInstance.setForeground(Color.WHITE);
+            this.add(labelInstance);
         }
-        newtext.setText(placeHolder);
-        newtext.setBounds(x, y, w, h);
-        repaint();
-        return newtext;
+        labelInstance.setText(content);
+        return labelInstance;
     }
 }

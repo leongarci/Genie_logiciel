@@ -33,13 +33,51 @@ public class MuseeDAO {
                         rs.getString("ville"),
                         rs.getString("domaine_thematique"),
                         rs.getString("histoire"),
-                        rs.getString("adresse"), // Vous utilisiez "adresse" au lieu de "atout" dans Booster
+                        rs.getString("adresse"),
                         rs.getString("interet"),
                         rareteCible
                 );
             }
         } catch (SQLException e) {
             System.err.println("Erreur MuseeDAO : " + e.getMessage());
+        }
+        return null;
+    }
+
+    public Carte getRandomCarteByRegion(String region) {
+        String sql = "SELECT identifiant, nom_officiel, domaine_thematique, histoire, adresse, ville, interet, total " +
+                "FROM public.musee WHERE region = ? ORDER BY RANDOM() LIMIT 1";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, region);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    int totalVisiteurs = rs.getInt("total");
+                    Rarete rareteCalculee;
+                    if (rs.wasNull() || totalVisiteurs < 20000) {
+                        rareteCalculee = Rarete.COMMUN;
+                    } else if (totalVisiteurs < 100000) {
+                        rareteCalculee = Rarete.RARE;
+                    } else if (totalVisiteurs < 1000000) {
+                        rareteCalculee = Rarete.EPIQUE;
+                    } else {
+                        rareteCalculee = Rarete.LEGENDAIRE;
+                    }
+                    return new Carte(
+                            rs.getInt("identifiant"),
+                            rs.getString("nom_officiel"),
+                            rs.getString("ville"),
+                            rs.getString("domaine_thematique"),
+                            rs.getString("histoire"),
+                            rs.getString("adresse"),
+                            rs.getString("interet"),
+                            rareteCalculee
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur MuseeDAO (getRandomCarteByRegion) : " + e.getMessage());
         }
         return null;
     }

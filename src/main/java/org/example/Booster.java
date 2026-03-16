@@ -14,6 +14,9 @@ public class Booster {
     public Booster() {
         genererCartes();
     }
+    public Booster(EnumRegion region) {
+        genererCartes(region);
+    }
 
     private void genererCartes() {
         Random rand = new Random();
@@ -41,11 +44,24 @@ public class Booster {
         }
     }
 
+    private void genererCartes(EnumRegion region) {
+        Random rand = new Random();
+        for (int i = 0; i < 5; i++) {
+            Carte c = museeDAO.getRandomCarteByRegion(region.getNomAffichage());
+            System.out.println("Booster région"+c.toString());
+            if (c != null) {
+                cartes.add(c);
+                idsTires.add(c.getIdentifiant());
+            }
+        }
+    }
+
     public void ouvrirBooster(User joueur) {
         if (joueur != null && !idsTires.isEmpty()) {
             collectionDAO.ajouterCartes(joueur.getId(), idsTires);
         }
     }
+
 
     public List<Carte> getCartes() {
         return cartes;

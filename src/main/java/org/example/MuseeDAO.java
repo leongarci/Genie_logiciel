@@ -48,8 +48,7 @@ public class MuseeDAO {
         String sql = "SELECT identifiant, nom_officiel, domaine_thematique, histoire, adresse, ville, interet, total " +
                 "FROM public.musee WHERE region = ? ORDER BY RANDOM() LIMIT 1";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConfig.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, region);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {

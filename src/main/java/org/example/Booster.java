@@ -36,7 +36,7 @@ public class Booster {
             }
 
             Carte c = museeDAO.getRandomCarteByRarete(rareteTiree);
-            //System.out.println(c.toString());
+            System.out.println(c.toString()+" "+rareteTiree.toString());
             if (c != null) {
                 cartes.add(c);
                 idsTires.add(c.getIdentifiant());
@@ -56,10 +56,20 @@ public class Booster {
         }
     }
 
-    public void ouvrirBooster(User joueur) {
-        if (joueur != null && !idsTires.isEmpty()) {
-            collectionDAO.ajouterCartes(joueur.getId(), idsTires);
+    public boolean ouvrirBooster(User joueur) {
+        if (joueur == null || idsTires.isEmpty()) {
+            System.err.println("Erreur : Joueur non connecté ou booster vide.");
+            return false;
         }
+        BoosterDAO boosterDAO = new BoosterDAO();
+        if (!boosterDAO.peutOuvrirBooster(joueur.getId())) {
+            System.out.println("Désolé " + joueur.getLogin() + ", vous avez déjà ouvert vos 3 boosters aujourd'hui ! Revenez demain.");
+            return false;
+        }
+        collectionDAO.ajouterCartes(joueur.getId(), idsTires);
+        boosterDAO.enregistrerOuverture(joueur.getId());
+        System.out.println("Booster ouvert avec succès par " + joueur.getLogin() + " !");
+        return true;
     }
 
 

@@ -5,7 +5,7 @@ public class Main {
 
         AuthService authService = new AuthService();
         User joueur=authService.login("leon", "mdp123");
-        Booster booster=new Booster(EnumRegion.ILE_DE_FRANCE);
+        Booster booster=new Booster();
         booster.ouvrirBooster(joueur);
 
     }

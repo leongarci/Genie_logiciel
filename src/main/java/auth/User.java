@@ -1,6 +1,7 @@
-package org.example;
+package auth;
 
 public class User {
+
     private int id;
     private String login;
 

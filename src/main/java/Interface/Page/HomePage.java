@@ -1,19 +1,23 @@
-package org.example.Interface.Page;
+package Interface.Page;
 
-import org.example.Interface.Interface;
-import org.example.User;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.nio.file.Path;
+
+import javax.swing.JPanel;
+
+import Interface.Interface;
 
 public class HomePage extends JPanel implements MouseListener, MouseMotionListener {
+
     private Interface anInterface;
 
     private final Color BACKGROUND_COLOR = new Color(0, 0, 0);
@@ -30,6 +34,7 @@ public class HomePage extends JPanel implements MouseListener, MouseMotionListen
     private boolean inventiryHover, boosterHover;
 
     private final int BORDER_SIZE = 75;
+
     public HomePage(Interface anInterface) {
         super(null);
         this.anInterface = anInterface;
@@ -69,7 +74,7 @@ public class HomePage extends JPanel implements MouseListener, MouseMotionListen
         g2d.fillRoundRect(xButton1, yButton, WIDTH_BUTTON, HEIGHT_BUTTON, 15, 15);
         if (!inventiryHover) {
             g2d.setColor(INVENTORY_COLOR);
-        }else {
+        } else {
             g2d.setColor(INVENTORY_HOVER_COLOR);
         }
         g2d.fillRoundRect(xButton1 + 3, yButton + 3, WIDTH_BUTTON - 6, HEIGHT_BUTTON - 6, 12, 12);
@@ -83,7 +88,7 @@ public class HomePage extends JPanel implements MouseListener, MouseMotionListen
         g2d.fillRoundRect(xButton2, yButton, WIDTH_BUTTON, HEIGHT_BUTTON, 15, 15);
         if (!boosterHover) {
             g2d.setColor(BOOSTER_COLOR);
-        }else {
+        } else {
             g2d.setColor(BOOSTER_HOVER_COLOR);
         }
         g2d.fillRoundRect(xButton2 + 3, yButton + 3, WIDTH_BUTTON - 6, HEIGHT_BUTTON - 6, 12, 12);
@@ -98,10 +103,10 @@ public class HomePage extends JPanel implements MouseListener, MouseMotionListen
         int xButton2 = (2 * getWidth() / 3) - (WIDTH_BUTTON / 2);
         int x = e.getX();
         int y = e.getY();
-        if (x > xButton1 && x < xButton1+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
+        if (x > xButton1 && x < xButton1 + WIDTH_BUTTON && y > yButton && y < yButton + HEIGHT_BUTTON) {
             System.out.println("Inventory");
             anInterface.show("INVENTORY");
-        }else if (x > xButton2 && x < xButton2+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
+        } else if (x > xButton2 && x < xButton2 + WIDTH_BUTTON && y > yButton && y < yButton + HEIGHT_BUTTON) {
             System.out.println("Booster");
             anInterface.show("BOOSTER");
         }
@@ -140,13 +145,13 @@ public class HomePage extends JPanel implements MouseListener, MouseMotionListen
         int xButton2 = (2 * getWidth() / 3) - (WIDTH_BUTTON / 2);
         int x = e.getX();
         int y = e.getY();
-        if (x > xButton1 && x < xButton1+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
+        if (x > xButton1 && x < xButton1 + WIDTH_BUTTON && y > yButton && y < yButton + HEIGHT_BUTTON) {
             inventiryHover = true;
             repaint();
-        }else if (x > xButton2 && x < xButton2+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
+        } else if (x > xButton2 && x < xButton2 + WIDTH_BUTTON && y > yButton && y < yButton + HEIGHT_BUTTON) {
             boosterHover = true;
             repaint();
-        }else {
+        } else {
             inventiryHover = false;
             boosterHover = false;
             repaint();

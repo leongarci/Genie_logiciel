@@ -1,8 +1,12 @@
-package org.example;
+package auth;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.mindrot.jbcrypt.BCrypt;
-
-import java.sql.*;
 
 public class AuthService {
 
@@ -11,8 +15,7 @@ public class AuthService {
 
         String sql = "INSERT INTO public.users (login, mdp) VALUES (?, ?)";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DatabaseConfig.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, login);
             pstmt.setString(2, mdpHache);
@@ -42,8 +45,7 @@ public class AuthService {
     public User login(String pseudo, String motDePasseSaisi) {
         String sql = "SELECT id, mdp FROM public.users WHERE login = ?";
 
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConfig.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, pseudo);
             ResultSet rs = pstmt.executeQuery();

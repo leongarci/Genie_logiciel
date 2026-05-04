@@ -1,19 +1,32 @@
-package org.example.Interface.Page;
+package Interface.Page;
 
-import org.example.AuthService;
-import org.example.Interface.FlexibleModernWindow;
-import org.example.Interface.Interface;
-import org.example.User;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.nio.file.Path;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+
+import Interface.Interface;
+import auth.AuthService;
+import auth.User;
 
 public class LoginPage extends JPanel {
+
     private Interface anInterface;
     private BufferedImage back;
     private JLabel err = null;
@@ -83,7 +96,8 @@ public class LoginPage extends JPanel {
     }
 
     /**
-     * Calcule la position de chaque élément en fonction de la taille actuelle de la fenêtre
+     * Calcule la position de chaque élément en fonction de la taille actuelle
+     * de la fenêtre
      */
     private void repositionnerComposants() {
         int centerX = getWidth() / 2;
@@ -122,7 +136,7 @@ public class LoginPage extends JPanel {
 
         g2d.setColor(MODAL_COLOR);
         g2d.fillRoundRect(x + PADDING_MODAL, y + PADDING_MODAL,
-                WIDTH_MODAL - PADDING_MODAL*2, HEIGHT_MODAL - PADDING_MODAL*2, 25, 25);
+                WIDTH_MODAL - PADDING_MODAL * 2, HEIGHT_MODAL - PADDING_MODAL * 2, 25, 25);
 
         // Titre dynamique
         g2d.setColor(TEXT_MODAL_COLOR);
@@ -139,7 +153,6 @@ public class LoginPage extends JPanel {
     }
 
     // --- Méthodes utilitaires pour créer les composants ---
-
     public JTextField textBox(String placeHolder) {
         JTextField textField = new JTextField(placeHolder);
         textField.setOpaque(false);
@@ -150,11 +163,12 @@ public class LoginPage extends JPanel {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                if (textField.getText().equals(placeHolder)){
+                if (textField.getText().equals(placeHolder)) {
                     textField.setText("");
                     textField.setForeground(Color.WHITE);
                 }
             }
+
             @Override
             public void focusLost(FocusEvent e) {
                 if (textField.getText().isEmpty()) {

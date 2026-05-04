@@ -1,4 +1,4 @@
-package org.example;
+package musee;
 
 public enum EnumRegion {
     ILE_DE_FRANCE("Île-de-France"),
@@ -19,7 +19,6 @@ public enum EnumRegion {
     NORMANDIE("Normandie"),
     AQUITAINE("Nouvelle-Aquitaine"),
     OCCITANIE("Occitanie");
-
 
     private final String nomAffichage;
 

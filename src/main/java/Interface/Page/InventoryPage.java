@@ -1,14 +1,20 @@
-package org.example.Interface.Page;
+package Interface.Page;
 
-import org.example.Interface.Interface;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
-public class BoosterPage extends JPanel implements MouseListener, MouseMotionListener {
+import javax.swing.JPanel;
+
+import Interface.Interface;
+
+public class InventoryPage extends JPanel implements MouseListener, MouseMotionListener {
+
     private Interface anInterface;
 
     private final Color BACKGROUND_COLOR = new Color(0, 0, 0);
@@ -18,7 +24,7 @@ public class BoosterPage extends JPanel implements MouseListener, MouseMotionLis
 
     private final int BORDER_SIZE = 75;
 
-    public BoosterPage(Interface anInterface) {
+    public InventoryPage(Interface anInterface) {
         super(null);
         this.anInterface = anInterface;
         setOpaque(false);

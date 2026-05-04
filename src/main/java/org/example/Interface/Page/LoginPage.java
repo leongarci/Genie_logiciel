@@ -13,7 +13,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class Login extends JPanel {
+public class LoginPage extends JPanel {
     private Interface anInterface;
     private BufferedImage back;
     private JLabel err = null;
@@ -35,18 +35,10 @@ public class Login extends JPanel {
     private final int HEIGHT_MODAL = 400; // Augmenté pour laisser de la place
     private final int PADDING_MODAL = 3;
 
-    public Login(Interface anInterface, Path pathBackground) {
+    public LoginPage(Interface anInterface) {
         super(null); // Layout null pour positionnement manuel dynamique
         this.anInterface = anInterface;
-
-        if (pathBackground != null) {
-            try {
-                this.back = ImageIO.read(pathBackground.toFile());
-            } catch (IOException e) {
-                System.err.println("Error loading background: " + e.getMessage());
-            }
-        }
-
+        setOpaque(false);
         // Initialisation des composants
         userField = textBox("username");
         passField = textBox("password");
@@ -119,7 +111,7 @@ public class Login extends JPanel {
 
         // Fond
         g2d.setColor(BACKGROUND_COLOR);
-        g2d.fillRect(0, 0, getWidth(), getHeight());
+        g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
 
         // Dessin de la modal
         int x = (getWidth() - WIDTH_MODAL) / 2;

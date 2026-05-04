@@ -1,7 +1,9 @@
 package org.example.Interface;
 
-import org.example.Interface.Page.Home;
-import org.example.Interface.Page.Login;
+import org.example.Interface.Page.BoosterPage;
+import org.example.Interface.Page.HomePage;
+import org.example.Interface.Page.InventoryPage;
+import org.example.Interface.Page.LoginPage;
 import org.example.User;
 
 import javax.swing.*;
@@ -22,10 +24,14 @@ public class Interface {
             mainContentPanel = new JPanel(cardLayout);
             mainContentPanel.setOpaque(false);
 
-            Login login = new Login(this, Paths.get("src/main/java/org/example/Interface/Page/Background/login.png").toAbsolutePath().normalize());
+            LoginPage login = new LoginPage(this);
             mainContentPanel.add(login, "LOGIN");
-            Home home = new Home(this, Paths.get("src/main/java/org/example/Interface/Page/Background/home.png").toAbsolutePath().normalize());
+            HomePage home = new HomePage(this);
             mainContentPanel.add(home, "HOME");
+            InventoryPage inventoryPage = new InventoryPage(this);
+            mainContentPanel.add(inventoryPage, "INVENTORY");
+            BoosterPage boosterPage = new BoosterPage(this);
+            mainContentPanel.add(boosterPage, "BOOSTER");
 
             FlexibleModernWindow mainWindow = new FlexibleModernWindow("Mon Appli", mainContentPanel, theme, 850, 600, null, false);
             if (user != null){

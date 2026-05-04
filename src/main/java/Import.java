@@ -19,14 +19,8 @@ public class Import {
 
     private static final String[] MUSEUM_FIELDS = {"identifiant", "nom_officiel", "adresse", "code_postal", "ville", "region", "departement", "domaine_thematique", "histoire", "atout", "interet", "annee_creation"};
     private static final String[] MUSEUM_OUTPUT_FIELDS = Arrays.copyOfRange(MUSEUM_FIELDS, 1, MUSEUM_FIELDS.length);
-
     private static final String[] VISITORS_FIELDS = {"idmuseofile", "payant", "gratuit", "total", "individuel", "scolaires", "groupes_hors_scolaires", "moins_18_ans_hors_scolaires", "_18_25_ans"};
-
-    //private static final String[] VISITORS_FIELDS = {"idmuseofile", "payant", "gratuit", "total", "individuel", "scolaires", "groupes_hors_scolaires", "moins_18_ans_hors_scolaires", "_18_25_ans"};
-    //private static final String[] FINAL_FIELDS = Stream.concat(Arrays.stream(MUSEUM_FIELDS), Arrays.stream(VISITORS_FIELDS)).toArray(String[]::new);
-    private static final String[] FINAL_FIELDS
-            = Stream.concat(Arrays.stream(MUSEUM_OUTPUT_FIELDS), Arrays.stream(VISITORS_FIELDS))
-                    .toArray(String[]::new);
+    private static final String[] FINAL_FIELDS = Stream.concat(Arrays.stream(MUSEUM_OUTPUT_FIELDS), Arrays.stream(VISITORS_FIELDS)).toArray(String[]::new);
     private static final String MAIN_DATA = "data/musees-de-france-base-museofile.csv";
     private static final String VISITORS_DATA = "data/ENTREES_ET_CATEGORIES_DE_PUBLIC.csv";
     private static final String OUTPUT_DATA = "data/formatted_museums.csv";

@@ -1,10 +1,11 @@
-package org.example;
+package collection;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 
+import carte.CartePossedee;
+
 public class CollectionService {
+
     private CollectionDAO collectionDAO;
 
     public CollectionService() {

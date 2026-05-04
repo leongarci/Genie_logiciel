@@ -1,4 +1,4 @@
-package org.example;
+package carte;
 
 public class Carte {
 
@@ -27,7 +27,7 @@ public class Carte {
     private Integer de18A25Ans;
     private Rarete rarete;
 
-    public Carte(int identifiant, String nomOfficiel, String ville, String domaineThematique, String histoire, String atout, String interet,Rarete rarete) {
+    public Carte(int identifiant, String nomOfficiel, String ville, String domaineThematique, String histoire, String atout, String interet, Rarete rarete) {
         this.identifiant = identifiant;
         this.nomOfficiel = nomOfficiel;
         this.ville = ville;
@@ -38,11 +38,25 @@ public class Carte {
         this.rarete = rarete;
     }
 
-    public int getIdentifiant() { return identifiant; }
-    public String getNomOfficiel() { return nomOfficiel; }
-    public String getVille() { return ville; }
-    public String getDomaineThematique() { return domaineThematique; }
-    public String getHistoire() { return histoire; }
+    public int getIdentifiant() {
+        return identifiant;
+    }
+
+    public String getNomOfficiel() {
+        return nomOfficiel;
+    }
+
+    public String getVille() {
+        return ville;
+    }
+
+    public String getDomaineThematique() {
+        return domaineThematique;
+    }
+
+    public String getHistoire() {
+        return histoire;
+    }
 
     public void setIdentifiant(int identifiant) {
         this.identifiant = identifiant;
@@ -206,6 +220,11 @@ public class Carte {
 
     public void setDe18A25Ans(Integer de18A25Ans) {
         this.de18A25Ans = de18A25Ans;
+    }
+
+    public String[] getThemes() {
+        String[] res = this.domaineThematique.replace("\"", "").replace(" ", "").split(",");
+        return res;
     }
 
     @Override

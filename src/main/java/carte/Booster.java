@@ -1,10 +1,16 @@
-package org.example;
+package carte;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import auth.User;
+import collection.CollectionDAO;
+import musee.EnumRegion;
+import musee.MuseeDAO;
+
 public class Booster {
+
     private List<Carte> cartes = new ArrayList<>();
     private List<Integer> idsTires = new ArrayList<>();
 
@@ -14,6 +20,7 @@ public class Booster {
     public Booster() {
         genererCartes();
     }
+
     public Booster(EnumRegion region) {
         genererCartes(region);
     }
@@ -48,7 +55,7 @@ public class Booster {
         Random rand = new Random();
         for (int i = 0; i < 5; i++) {
             Carte c = museeDAO.getRandomCarteByRegion(region.getNomAffichage());
-            System.out.println("Booster région"+c.toString());
+            System.out.println("Booster région" + c.toString());
             if (c != null) {
                 cartes.add(c);
                 idsTires.add(c.getIdentifiant());
@@ -71,7 +78,6 @@ public class Booster {
         System.out.println("Booster ouvert avec succès par " + joueur.getLogin() + " !");
         return true;
     }
-
 
     public List<Carte> getCartes() {
         return cartes;

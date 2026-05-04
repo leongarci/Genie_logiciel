@@ -1,3 +1,4 @@
+package data;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -162,5 +163,12 @@ public class Import {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+}
+
+class Main {
+
+    public static void main(String[] args) {
+        Import.formatGlobal();
     }
 }

@@ -1,6 +1,7 @@
-package org.example;
+package carte;
 
 public class CartePossedee {
+
     private Carte carte;
     private int quantite;
 

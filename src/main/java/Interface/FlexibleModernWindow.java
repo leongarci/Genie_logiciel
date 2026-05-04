@@ -1,12 +1,56 @@
-package org.example.Interface;
+package Interface;
 
-import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
+
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.InputMap;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JPanel;
+import javax.swing.JRootPane;
+import javax.swing.JTextField;
+import javax.swing.JWindow;
+import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 
 public class FlexibleModernWindow extends JFrame {
 
@@ -26,6 +70,7 @@ public class FlexibleModernWindow extends JFrame {
     // 1. ARCHITECTURE : THÈMES MODULAIRES
     // ==========================================
     public static abstract class WindowTheme {
+
         public String fontFamily = "Segoe UI";
         public Font titleFont = new Font(fontFamily, Font.BOLD, 13);
         public Font menuFont = new Font(fontFamily, Font.PLAIN, 13);
@@ -60,6 +105,7 @@ public class FlexibleModernWindow extends JFrame {
     }
 
     public static class DarkTheme extends WindowTheme {
+
         public DarkTheme() {
             windowBackground = new Color(18, 18, 18);
             contentBackground = new Color(35, 35, 35);
@@ -73,6 +119,7 @@ public class FlexibleModernWindow extends JFrame {
     }
 
     public static class LightTheme extends WindowTheme {
+
         public LightTheme() {
             windowBackground = new Color(240, 240, 240);
             contentBackground = new Color(255, 255, 255);
@@ -94,12 +141,17 @@ public class FlexibleModernWindow extends JFrame {
         setSize(width, height);
         applyLocation(location);
         normalBounds = getBounds();
-        if (startMaximized) toggleMaximize();
+        if (startMaximized) {
+            toggleMaximize();
+        }
     }
 
     private void applyLocation(Point location) {
-        if (location == null) setLocationRelativeTo(null);
-        else setLocation(location);
+        if (location == null) {
+            setLocationRelativeTo(null);
+        } else {
+            setLocation(location);
+        }
     }
 
     private void initWindow(String title, JPanel contentPanel) {
@@ -109,7 +161,8 @@ public class FlexibleModernWindow extends JFrame {
         snapHandler = new SnapHandler(this);
 
         mainContainer = new JPanel(new BorderLayout()) {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -128,7 +181,8 @@ public class FlexibleModernWindow extends JFrame {
         mainContainer.add(titleBar, BorderLayout.NORTH);
 
         contentWrapper = new JPanel(new BorderLayout()) {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -168,13 +222,19 @@ public class FlexibleModernWindow extends JFrame {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, InputEvent.CTRL_DOWN_MASK), "close");
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.ALT_DOWN_MASK), "close");
         actionMap.put("close", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) { System.exit(0); }
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
         });
 
         // Ctrl + F pour Focus la recherche
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), "focusSearch");
         actionMap.put("focusSearch", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) { titleBar.focusSearch(); }
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                titleBar.focusSearch();
+            }
         });
 
         // La navigation Tab est gérée nativement par Swing si les composants sont focusables.
@@ -184,10 +244,21 @@ public class FlexibleModernWindow extends JFrame {
     // ==========================================
     // MÉTHODES PUBLIQUES (API)
     // ==========================================
-    public WindowTheme getTheme() { return theme; }
-    public boolean isSnapped() { return isSnapped; }
-    public Rectangle getNormalBounds() { return normalBounds; }
-    public void setNormalBounds(Rectangle bounds) { this.normalBounds = bounds; }
+    public WindowTheme getTheme() {
+        return theme;
+    }
+
+    public boolean isSnapped() {
+        return isSnapped;
+    }
+
+    public Rectangle getNormalBounds() {
+        return normalBounds;
+    }
+
+    public void setNormalBounds(Rectangle bounds) {
+        this.normalBounds = bounds;
+    }
 
     public void setTheme(WindowTheme newTheme) {
         this.theme = newTheme;
@@ -199,8 +270,11 @@ public class FlexibleModernWindow extends JFrame {
     public void updateWindowState(boolean snapped, boolean maximized) {
         this.isSnapped = snapped;
         this.isMaximized = maximized;
-        if (snapped) mainContainer.setBorder(new EmptyBorder(1, 1, 1, 1));
-        else mainContainer.setBorder(new EmptyBorder(0, theme.outerPadding, theme.outerPadding, theme.outerPadding));
+        if (snapped) {
+            mainContainer.setBorder(new EmptyBorder(1, 1, 1, 1));
+        } else {
+            mainContainer.setBorder(new EmptyBorder(0, theme.outerPadding, theme.outerPadding, theme.outerPadding));
+        }
         revalidate();
         repaint();
     }
@@ -212,20 +286,33 @@ public class FlexibleModernWindow extends JFrame {
         } else {
             normalBounds = getBounds();
             Rectangle b = snapHandler.getPredictedSnapBounds(new Point(normalBounds.x, normalBounds.y));
-            if (b != null) setBounds(b);
-            else setExtendedState(JFrame.MAXIMIZED_BOTH); // Fallback
+            if (b != null) {
+                setBounds(b);
+            } else {
+                setExtendedState(JFrame.MAXIMIZED_BOTH); // Fallback
+
+            }
             updateWindowState(true, true);
         }
     }
 
-    public void setAppLogo(ImageIcon icon) { titleBar.setLogo(icon); }
-    public JTextField addTitleSearchBar(String placeholder) { return titleBar.addSearchBar(placeholder); }
-    public void setModernMenuBar(JMenuBar menuBar) { titleBar.setMenuBar(menuBar); }
+    public void setAppLogo(ImageIcon icon) {
+        titleBar.setLogo(icon);
+    }
+
+    public JTextField addTitleSearchBar(String placeholder) {
+        return titleBar.addSearchBar(placeholder);
+    }
+
+    public void setModernMenuBar(JMenuBar menuBar) {
+        titleBar.setMenuBar(menuBar);
+    }
 
     // ==========================================
     // 1. ARCHITECTURE : BARRE DE TITRE SÉPARÉE
     // ==========================================
     private class ModernTitleBar extends JPanel {
+
         private final FlexibleModernWindow window;
         private JLabel iconLabel;
         private JPanel menuContainer;
@@ -283,12 +370,17 @@ public class FlexibleModernWindow extends JFrame {
                         window.setNormalBounds(window.getBounds());
                     } else {
                         isResizingTop = false;
-                        mouseX = e.getX(); mouseY = e.getY();
+                        mouseX = e.getX();
+                        mouseY = e.getY();
                     }
                 }
+
                 public void mouseClicked(MouseEvent e) {
-                    if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) window.toggleMaximize();
+                    if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
+                        window.toggleMaximize();
+                    }
                 }
+
                 public void mouseReleased(MouseEvent e) {
                     isResizingTop = false;
                     window.snapHandler.applySnapPreview();
@@ -299,6 +391,7 @@ public class FlexibleModernWindow extends JFrame {
                 public void mouseMoved(MouseEvent e) {
                     setCursor(Cursor.getPredefinedCursor((!window.isSnapped() && e.getY() <= RESIZE_MARGIN) ? Cursor.N_RESIZE_CURSOR : Cursor.DEFAULT_CURSOR));
                 }
+
                 public void mouseDragged(MouseEvent e) {
                     if (isResizingTop) {
                         Point currentPos = e.getLocationOnScreen();
@@ -317,7 +410,10 @@ public class FlexibleModernWindow extends JFrame {
                         int restoreH = normalBounds.height;
 
                         GraphicsConfiguration gc = window.getGraphicsConfiguration();
-                        if (restoreW >= gc.getBounds().width - 20) { restoreW = 800; restoreH = 600; }
+                        if (restoreW >= gc.getBounds().width - 20) {
+                            restoreW = 800;
+                            restoreH = 600;
+                        }
 
                         double widthRatio = (double) mouseX / getWidth();
                         window.updateWindowState(false, false);
@@ -335,8 +431,9 @@ public class FlexibleModernWindow extends JFrame {
         }
 
         public void setLogo(ImageIcon icon) {
-            if (icon == null) iconLabel.setVisible(false);
-            else {
+            if (icon == null) {
+                iconLabel.setVisible(false);
+            } else {
                 int size = window.theme.titleBarHeight - 16;
                 iconLabel.setIcon(new ImageIcon(icon.getImage().getScaledInstance(size, size, Image.SCALE_SMOOTH)));
                 iconLabel.setVisible(true);
@@ -362,37 +459,49 @@ public class FlexibleModernWindow extends JFrame {
             ));
 
             searchField.addFocusListener(new FocusAdapter() {
-                @Override public void focusGained(FocusEvent e) {
+                @Override
+                public void focusGained(FocusEvent e) {
                     if (searchField.getText().equals(placeholderText)) {
-                        searchField.setText(""); searchField.setForeground(window.theme.titleColor);
+                        searchField.setText("");
+                        searchField.setForeground(window.theme.titleColor);
                     }
                 }
-                @Override public void focusLost(FocusEvent e) {
+
+                @Override
+                public void focusLost(FocusEvent e) {
                     if (searchField.getText().isEmpty()) {
-                        searchField.setForeground(Color.GRAY); searchField.setText(placeholderText);
+                        searchField.setForeground(Color.GRAY);
+                        searchField.setText(placeholderText);
                     }
                 }
             });
 
             searchContainer.removeAll();
             searchContainer.add(searchField);
-            searchContainer.revalidate(); searchContainer.repaint();
+            searchContainer.revalidate();
+            searchContainer.repaint();
             return searchField;
         }
 
         public void focusSearch() {
-            if (searchField != null) searchField.requestFocusInWindow();
+            if (searchField != null) {
+                searchField.requestFocusInWindow();
+            }
         }
 
         public void setMenuBar(JMenuBar menuBar) {
-            menuBar.setOpaque(false); menuBar.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-            menuContainer.removeAll(); menuContainer.add(menuBar, BorderLayout.CENTER);
-            menuContainer.revalidate(); menuContainer.repaint();
+            menuBar.setOpaque(false);
+            menuBar.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+            menuContainer.removeAll();
+            menuContainer.add(menuBar, BorderLayout.CENTER);
+            menuContainer.revalidate();
+            menuContainer.repaint();
         }
 
         private JButton createControlButton(Color normal, Color hover, Runnable action) {
             JButton btn = new JButton() {
-                @Override protected void paintComponent(Graphics g) {
+                @Override
+                protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setColor(getModel().isRollover() ? hover : normal);
@@ -400,8 +509,11 @@ public class FlexibleModernWindow extends JFrame {
                     g2.dispose();
                 }
             };
-            btn.setPreferredSize(new Dimension(13, 13)); btn.setContentAreaFilled(false);
-            btn.setBorderPainted(false); btn.setFocusPainted(false); btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            btn.setPreferredSize(new Dimension(13, 13));
+            btn.setContentAreaFilled(false);
+            btn.setBorderPainted(false);
+            btn.setFocusPainted(false);
+            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
             btn.addActionListener(e -> action.run());
             return btn;
         }
@@ -411,6 +523,7 @@ public class FlexibleModernWindow extends JFrame {
     // 1 & 2. GESTIONNAIRE D'ANCRAGE & MULTI-ÉCRANS
     // ==========================================
     private class SnapHandler {
+
         private final FlexibleModernWindow window;
         private final JWindow snapPreview;
 
@@ -421,7 +534,8 @@ public class FlexibleModernWindow extends JFrame {
             snapPreview.setBackground(new Color(0, 0, 0, 0));
 
             JPanel previewPanel = new JPanel() {
-                @Override protected void paintComponent(Graphics g) {
+                @Override
+                protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setColor(window.theme.snapPreviewFill);
@@ -439,9 +553,13 @@ public class FlexibleModernWindow extends JFrame {
             Rectangle snapBounds = getPredictedSnapBounds(screenLocation);
             if (snapBounds != null) {
                 snapPreview.setBounds(snapBounds);
-                if (!snapPreview.isVisible()) snapPreview.setVisible(true);
+                if (!snapPreview.isVisible()) {
+                    snapPreview.setVisible(true);
+                }
             } else {
-                if (snapPreview.isVisible()) snapPreview.setVisible(false);
+                if (snapPreview.isVisible()) {
+                    snapPreview.setVisible(false);
+                }
             }
         }
 
@@ -473,8 +591,10 @@ public class FlexibleModernWindow extends JFrame {
             Rectangle bounds = gc.getBounds();
             Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
 
-            int x = bounds.x + insets.left; int y = bounds.y + insets.top;
-            int w = bounds.width - insets.left - insets.right; int h = bounds.height - insets.top - insets.bottom;
+            int x = bounds.x + insets.left;
+            int y = bounds.y + insets.top;
+            int w = bounds.width - insets.left - insets.right;
+            int h = bounds.height - insets.top - insets.bottom;
             int snapTolerance = 15;
 
             boolean top = screenLocation.y <= y + snapTolerance;
@@ -482,13 +602,21 @@ public class FlexibleModernWindow extends JFrame {
             boolean left = screenLocation.x <= x + snapTolerance;
             boolean right = screenLocation.x >= x + w - snapTolerance;
 
-            if (top && left) return new Rectangle(x, y, w / 2, h / 2);
-            else if (top && right) return new Rectangle(x + w / 2, y, w / 2, h / 2);
-            else if (bottom && left) return new Rectangle(x, y + h / 2, w / 2, h / 2);
-            else if (bottom && right) return new Rectangle(x + w / 2, y + h / 2, w / 2, h / 2);
-            else if (top) return new Rectangle(x, y, w, h);
-            else if (left) return new Rectangle(x, y, w / 2, h);
-            else if (right) return new Rectangle(x + w / 2, y, w / 2, h);
+            if (top && left) {
+                return new Rectangle(x, y, w / 2, h / 2);
+            } else if (top && right) {
+                return new Rectangle(x + w / 2, y, w / 2, h / 2);
+            } else if (bottom && left) {
+                return new Rectangle(x, y + h / 2, w / 2, h / 2);
+            } else if (bottom && right) {
+                return new Rectangle(x + w / 2, y + h / 2, w / 2, h / 2);
+            } else if (top) {
+                return new Rectangle(x, y, w, h);
+            } else if (left) {
+                return new Rectangle(x, y, w / 2, h);
+            } else if (right) {
+                return new Rectangle(x + w / 2, y, w / 2, h);
+            }
 
             return null;
         }
@@ -497,7 +625,9 @@ public class FlexibleModernWindow extends JFrame {
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             for (GraphicsDevice gd : ge.getScreenDevices()) {
                 GraphicsConfiguration gc = gd.getDefaultConfiguration();
-                if (gc.getBounds().contains(p)) return gc;
+                if (gc.getBounds().contains(p)) {
+                    return gc;
+                }
             }
             return window.getGraphicsConfiguration(); // Fallback
         }
@@ -507,55 +637,93 @@ public class FlexibleModernWindow extends JFrame {
     // 3. PERFORMANCE DU REDIMENSIONNEMENT
     // ==========================================
     private class ResizeListener extends MouseAdapter {
+
         private int cursorType = Cursor.DEFAULT_CURSOR;
         private Point startPos = null;
         private Rectangle startBounds = null;
         private long lastUpdate = 0;
         private final int THROTTLE_MS = 15; // Évite l'engorgement du thread UI (~60 FPS)
 
-        @Override public void mouseMoved(MouseEvent e) {
-            if (isSnapped) { setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)); return; }
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            if (isSnapped) {
+                setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                return;
+            }
             Point p = e.getPoint();
-            int w = getWidth(); int h = getHeight();
+            int w = getWidth();
+            int h = getHeight();
 
-            boolean left = p.x <= RESIZE_MARGIN; boolean right = p.x >= w - RESIZE_MARGIN;
-            boolean top = p.y <= RESIZE_MARGIN; boolean bottom = p.y >= h - RESIZE_MARGIN;
+            boolean left = p.x <= RESIZE_MARGIN;
+            boolean right = p.x >= w - RESIZE_MARGIN;
+            boolean top = p.y <= RESIZE_MARGIN;
+            boolean bottom = p.y >= h - RESIZE_MARGIN;
 
-            if (top && left) cursorType = Cursor.NW_RESIZE_CURSOR;
-            else if (top && right) cursorType = Cursor.NE_RESIZE_CURSOR;
-            else if (bottom && left) cursorType = Cursor.SW_RESIZE_CURSOR;
-            else if (bottom && right) cursorType = Cursor.SE_RESIZE_CURSOR;
-            else if (bottom) cursorType = Cursor.S_RESIZE_CURSOR;
-            else if (left) cursorType = Cursor.W_RESIZE_CURSOR;
-            else if (right) cursorType = Cursor.E_RESIZE_CURSOR;
-            else cursorType = Cursor.DEFAULT_CURSOR;
+            if (top && left) {
+                cursorType = Cursor.NW_RESIZE_CURSOR;
+            } else if (top && right) {
+                cursorType = Cursor.NE_RESIZE_CURSOR;
+            } else if (bottom && left) {
+                cursorType = Cursor.SW_RESIZE_CURSOR;
+            } else if (bottom && right) {
+                cursorType = Cursor.SE_RESIZE_CURSOR;
+            } else if (bottom) {
+                cursorType = Cursor.S_RESIZE_CURSOR;
+            } else if (left) {
+                cursorType = Cursor.W_RESIZE_CURSOR;
+            } else if (right) {
+                cursorType = Cursor.E_RESIZE_CURSOR;
+            } else {
+                cursorType = Cursor.DEFAULT_CURSOR;
+            }
 
             setCursor(Cursor.getPredefinedCursor(cursorType));
         }
 
-        @Override public void mousePressed(MouseEvent e) {
+        @Override
+        public void mousePressed(MouseEvent e) {
             if (cursorType != Cursor.DEFAULT_CURSOR) {
-                startPos = e.getLocationOnScreen(); startBounds = getBounds();
+                startPos = e.getLocationOnScreen();
+                startBounds = getBounds();
             }
         }
 
-        @Override public void mouseDragged(MouseEvent e) {
-            if (startPos == null || startBounds == null || cursorType == Cursor.DEFAULT_CURSOR || isSnapped) return;
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if (startPos == null || startBounds == null || cursorType == Cursor.DEFAULT_CURSOR || isSnapped) {
+                return;
+            }
 
             // THROTTLE : On ne redessine pas à chaque milliseconde pour éviter les lags avec des JTextArea
             long now = System.currentTimeMillis();
-            if (now - lastUpdate < THROTTLE_MS) return;
+            if (now - lastUpdate < THROTTLE_MS) {
+                return;
+            }
             lastUpdate = now;
 
             Point currentPos = e.getLocationOnScreen();
-            int dx = currentPos.x - startPos.x; int dy = currentPos.y - startPos.y;
-            int x = startBounds.x; int y = startBounds.y; int w = startBounds.width; int h = startBounds.height;
+            int dx = currentPos.x - startPos.x;
+            int dy = currentPos.y - startPos.y;
+            int x = startBounds.x;
+            int y = startBounds.y;
+            int w = startBounds.width;
+            int h = startBounds.height;
             Dimension minSize = getMinimumSize();
 
-            if (cursorType == Cursor.E_RESIZE_CURSOR || cursorType == Cursor.NE_RESIZE_CURSOR || cursorType == Cursor.SE_RESIZE_CURSOR) w += dx;
-            if (cursorType == Cursor.S_RESIZE_CURSOR || cursorType == Cursor.SW_RESIZE_CURSOR || cursorType == Cursor.SE_RESIZE_CURSOR) h += dy;
-            if (cursorType == Cursor.W_RESIZE_CURSOR || cursorType == Cursor.NW_RESIZE_CURSOR || cursorType == Cursor.SW_RESIZE_CURSOR) { w -= dx; x += dx; }
-            if (cursorType == Cursor.NW_RESIZE_CURSOR || cursorType == Cursor.NE_RESIZE_CURSOR) { h -= dy; y += dy; }
+            if (cursorType == Cursor.E_RESIZE_CURSOR || cursorType == Cursor.NE_RESIZE_CURSOR || cursorType == Cursor.SE_RESIZE_CURSOR) {
+                w += dx;
+            }
+            if (cursorType == Cursor.S_RESIZE_CURSOR || cursorType == Cursor.SW_RESIZE_CURSOR || cursorType == Cursor.SE_RESIZE_CURSOR) {
+                h += dy;
+            }
+            if (cursorType == Cursor.W_RESIZE_CURSOR || cursorType == Cursor.NW_RESIZE_CURSOR || cursorType == Cursor.SW_RESIZE_CURSOR) {
+                w -= dx;
+                x += dx;
+            }
+            if (cursorType == Cursor.NW_RESIZE_CURSOR || cursorType == Cursor.NE_RESIZE_CURSOR) {
+                h -= dy;
+                y += dy;
+            }
 
             if (w >= minSize.width && h >= minSize.height) {
                 setBounds(x, y, w, h);
@@ -563,7 +731,12 @@ public class FlexibleModernWindow extends JFrame {
                 validate(); // Assure une mise à jour propre du layout interne sans repaints excessifs
             }
         }
-        @Override public void mouseReleased(MouseEvent e) { startPos = null; startBounds = null; }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            startPos = null;
+            startBounds = null;
+        }
     }
 
     // ==========================================
@@ -591,14 +764,20 @@ public class FlexibleModernWindow extends JFrame {
     }
 
     public static class RoundedMenu extends JMenu {
+
         private final WindowTheme theme;
+
         public RoundedMenu(String title, WindowTheme theme) {
             super(title);
             this.theme = theme;
-            setOpaque(false); setForeground(theme.menuForeground); setFont(theme.menuFont);
+            setOpaque(false);
+            setForeground(theme.menuForeground);
+            setFont(theme.menuFont);
             setBorder(BorderFactory.createEmptyBorder(4, 12, 4, 12));
         }
-        @Override protected void paintComponent(Graphics g) {
+
+        @Override
+        protected void paintComponent(Graphics g) {
             if (getModel().isRollover() || getModel().isSelected()) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -611,16 +790,33 @@ public class FlexibleModernWindow extends JFrame {
     }
 
     public static class RoundedPopupBorder implements Border {
-        private final Color color; private final int radius;
-        public RoundedPopupBorder(Color color, int radius) { this.color = color; this.radius = radius; }
-        @Override public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+
+        private final Color color;
+        private final int radius;
+
+        public RoundedPopupBorder(Color color, int radius) {
+            this.color = color;
+            this.radius = radius;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(color); g2.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+            g2.setColor(color);
+            g2.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
             g2.dispose();
         }
-        @Override public Insets getBorderInsets(Component c) { return new Insets(4, 4, 4, 4); }
-        @Override public boolean isBorderOpaque() { return false; }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(4, 4, 4, 4);
+        }
+
+        @Override
+        public boolean isBorderOpaque() {
+            return false;
+        }
     }
 
 }

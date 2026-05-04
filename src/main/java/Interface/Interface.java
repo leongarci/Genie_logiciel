@@ -1,20 +1,22 @@
-package org.example.Interface;
+package Interface;
 
-import org.example.Interface.Page.BoosterPage;
-import org.example.Interface.Page.HomePage;
-import org.example.Interface.Page.InventoryPage;
-import org.example.Interface.Page.LoginPage;
-import org.example.User;
+import java.awt.CardLayout;
 
-import javax.swing.*;
-import java.awt.*;
-import java.nio.file.Paths;
-import java.util.HashMap;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
+import Interface.Page.BoosterPage;
+import Interface.Page.HomePage;
+import Interface.Page.InventoryPage;
+import Interface.Page.LoginPage;
+import auth.User;
 
 public class Interface {
+
     private CardLayout cardLayout;
     private JPanel mainContentPanel;
     private User user;
+
     public Interface() {
         SwingUtilities.invokeLater(() -> {
             FlexibleModernWindow.WindowTheme theme = new FlexibleModernWindow.DarkTheme(); // Essaie LightTheme() pour tester la modularité !
@@ -34,9 +36,9 @@ public class Interface {
             mainContentPanel.add(boosterPage, "BOOSTER");
 
             FlexibleModernWindow mainWindow = new FlexibleModernWindow("Mon Appli", mainContentPanel, theme, 850, 600, null, false);
-            if (user != null){
+            if (user != null) {
                 cardLayout.show(mainContentPanel, "HOME");
-            }else {
+            } else {
                 cardLayout.show(mainContentPanel, "LOGIN");
             }
             mainWindow.setVisible(true);

@@ -40,7 +40,7 @@ public class BoosterPage extends JPanel implements MouseListener, MouseMotionLis
 
     // Constantes pour le bouton de retour
     private final int SIZE_BACK_BUTTON = 50;
-    private final int MARGIN_BACK = 15; // Marge par rapport au bord gauche
+    private final int MARGIN_BACK = 15;
 
     private boolean BUTTON_HOVER = false;
     private boolean LEFT_BUTTON_HOVER = false;
@@ -72,15 +72,14 @@ public class BoosterPage extends JPanel implements MouseListener, MouseMotionLis
         g2d.drawLine(0, BORDER_SIZE, getWidth(), BORDER_SIZE);
         g2d.drawLine(0, getHeight() - BORDER_SIZE, getWidth(), getHeight() - BORDER_SIZE);
 
-        // --- Bouton RETOUR en haut à gauche ---
+        // Bouton RETOUR
         int backBtnX = MARGIN_BACK;
-        // Centré verticalement dans la zone du haut (qui fait la taille BORDER_SIZE)
         int backBtnY = (BORDER_SIZE - SIZE_BACK_BUTTON) / 2;
 
         g2d.setColor(LINE_COLOR);
         g2d.fillRoundRect(backBtnX, backBtnY, SIZE_BACK_BUTTON, SIZE_BACK_BUTTON, 15, 15);
         if (BACK_BUTTON_HOVER) {
-            g2d.setColor(RETURN_HOVER_COLOR); // Utilise la même couleur que le carrousel (modifiable si tu veux)
+            g2d.setColor(RETURN_HOVER_COLOR);
         } else {
             g2d.setColor(RETURN_COLOR);
         }

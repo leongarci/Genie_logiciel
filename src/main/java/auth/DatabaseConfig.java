@@ -4,6 +4,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * Classe DatabaseConfig
+ *
+ * Configuration de la connexion à la base de données
+ */
 public class DatabaseConfig {
 
     private static final String URL = "jdbc:postgresql://my-astre.com:5433/dbGenie";

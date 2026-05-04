@@ -8,8 +8,14 @@ import java.sql.Statement;
 
 import org.mindrot.jbcrypt.BCrypt;
 
+/**
+ * Classe AuthService
+ *
+ * Service d'inscription et de connexion utilisateur à la DB
+ */
 public class AuthService {
 
+    // Inscription d'un nouvel utilisateur
     public User inscrireUtilisateur(String login, String motDePasseClair) {
         String mdpHache = BCrypt.hashpw(motDePasseClair, BCrypt.gensalt());
 
@@ -42,6 +48,7 @@ public class AuthService {
         return null;
     }
 
+    // Connexion d'un utilisateur inscrit
     public User login(String pseudo, String motDePasseSaisi) {
         String sql = "SELECT id, mdp FROM public.users WHERE login = ?";
 

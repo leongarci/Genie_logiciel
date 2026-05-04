@@ -9,8 +9,14 @@ import auth.DatabaseConfig;
 import carte.Carte;
 import carte.Rarete;
 
+/**
+ * Classe MuseeDAO
+ *
+ * Gère les opérations de base de données pour les musées
+ */
 public class MuseeDAO {
 
+    // Récupère une carte aléatoire par rareté
     public Carte getRandomCarteByRarete(Rarete rareteCible) {
 
         String conditionRarete = "";
@@ -52,6 +58,7 @@ public class MuseeDAO {
         return null;
     }
 
+    // Récupère une carte aléatoire par région
     public Carte getRandomCarteByRegion(String region) {
         String sql = "SELECT identifiant, nom_officiel, domaine_thematique, histoire, adresse, ville, interet, total "
                 + "FROM public.musee WHERE region = ? ORDER BY RANDOM() LIMIT 1";

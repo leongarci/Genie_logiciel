@@ -9,6 +9,11 @@ import collection.CollectionDAO;
 import musee.EnumRegion;
 import musee.MuseeDAO;
 
+/**
+ * Classe Booster
+ *
+ * Représente un booster contenant plusieurs cartes
+ */
 public class Booster {
 
     private List<Carte> cartes = new ArrayList<>();
@@ -17,14 +22,17 @@ public class Booster {
     private MuseeDAO museeDAO = new MuseeDAO();
     private CollectionDAO collectionDAO = new CollectionDAO();
 
+    // Génère un booster aléatoire
     public Booster() {
         genererCartes();
     }
 
+    // Génère un booster aléatoire des cartes d'une région spécifique
     public Booster(EnumRegion region) {
         genererCartes(region);
     }
 
+    // Génère les cartes du booster
     private void genererCartes() {
         Random rand = new Random();
 
@@ -43,7 +51,7 @@ public class Booster {
             }
 
             Carte c = museeDAO.getRandomCarteByRarete(rareteTiree);
-            System.out.println(c.toString()+" "+rareteTiree.toString());
+            System.out.println(c.toString() + " " + rareteTiree.toString());
             if (c != null) {
                 cartes.add(c);
                 idsTires.add(c.getIdentifiant());
@@ -51,8 +59,8 @@ public class Booster {
         }
     }
 
+    // Génère les cartes du booster pour une région spécifique
     private void genererCartes(EnumRegion region) {
-        Random rand = new Random();
         for (int i = 0; i < 5; i++) {
             Carte c = museeDAO.getRandomCarteByRegion(region.getNomAffichage());
             System.out.println("Booster région" + c.toString());
@@ -63,6 +71,7 @@ public class Booster {
         }
     }
 
+    // Ouvre un booster et attribue les cartes à un joueur
     public boolean ouvrirBooster(User joueur) {
         if (joueur == null || idsTires.isEmpty()) {
             System.err.println("Erreur : Joueur non connecté ou booster vide.");
@@ -79,6 +88,7 @@ public class Booster {
         return true;
     }
 
+    // Récupération des cartes du booster
     public List<Carte> getCartes() {
         return cartes;
     }

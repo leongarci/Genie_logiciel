@@ -1,5 +1,10 @@
 package auth;
 
+/**
+ * Classe User
+ *
+ * Représente un utilisateur du système
+ */
 public class User {
 
     private int id;

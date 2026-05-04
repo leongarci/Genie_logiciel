@@ -1,5 +1,8 @@
 package musee;
 
+/**
+ * Classe RegionStats
+ */
 public class RegionStats {
 
     private String nomRegion;

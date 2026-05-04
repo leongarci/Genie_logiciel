@@ -1,5 +1,10 @@
 package carte;
 
+/**
+ * Classe CartePossedee
+ *
+ * Représente une carte possédée par le joueur
+ */
 public class CartePossedee {
 
     private Carte carte;

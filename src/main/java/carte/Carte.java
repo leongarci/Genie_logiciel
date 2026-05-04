@@ -1,5 +1,10 @@
 package carte;
 
+/**
+ * Classe Carte
+ *
+ * Représente une carte du jeu
+ */
 public class Carte {
 
     private int identifiant;
@@ -38,6 +43,9 @@ public class Carte {
         this.rarete = rarete;
     }
 
+    /**
+     * Getters et setters des attributs d'une carte
+     */
     public int getIdentifiant() {
         return identifiant;
     }

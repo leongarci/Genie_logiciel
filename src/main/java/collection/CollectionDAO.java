@@ -12,8 +12,14 @@ import carte.Carte;
 import carte.CartePossedee;
 import carte.Rarete;
 
+/**
+ * Classe CollectionDAO
+ *
+ * Gère les opérations de base de données pour la collection de cartes
+ */
 public class CollectionDAO {
 
+    // Ajoute des cartes à la collection d'un utilisateur
     public void ajouterCartes(int userId, List<Integer> museeIds) {
         String sql = "INSERT INTO public.collection (user_id, musee_id, quantite) "
                 + "VALUES (?, ?, 1) "
@@ -39,6 +45,7 @@ public class CollectionDAO {
         }
     }
 
+    // Récupère la collection de cartes d'un utilisateur
     public List<CartePossedee> getCollectionUtilisateur(int userId) {
         List<CartePossedee> maCollection = new ArrayList<>();
         String sql = "SELECT m.identifiant, m.nom_officiel, m.ville, m.domaine_thematique, "

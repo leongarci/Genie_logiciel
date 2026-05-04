@@ -4,6 +4,11 @@ import java.util.List;
 
 import carte.CartePossedee;
 
+/**
+ * Classe CollectionService
+ *
+ * Gère les opérations de service pour la collection de cartes
+ */
 public class CollectionService {
 
     private CollectionDAO collectionDAO;

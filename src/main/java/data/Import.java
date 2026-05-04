@@ -16,6 +16,11 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 
+/**
+ * Classe Import
+ *
+ * Gère l'importation et le formatage des données des musées
+ */
 public class Import {
 
     private static final String[] MUSEUM_FIELDS = {"identifiant", "nom_officiel", "adresse", "code_postal", "ville", "region", "departement", "domaine_thematique", "histoire", "atout", "interet", "annee_creation"};
@@ -26,6 +31,7 @@ public class Import {
     private static final String VISITORS_DATA = "data/ENTREES_ET_CATEGORIES_DE_PUBLIC.csv";
     private static final String OUTPUT_DATA = "data/formatted_museums.csv";
 
+    // Convertit une valeur en chaîne d'entier
     private static String toIntegerString(String value, String fallback) {
         if (value == null) {
             return fallback;
@@ -144,7 +150,6 @@ public class Import {
                 String id = museum[0];
                 String[] visitorData = visitors.stream().filter(v -> v[0].equals(id)).findFirst().orElse(null);
                 if (visitorData != null) {
-                    //finalMuseums.add(Stream.concat(Arrays.stream(museum), Arrays.stream(visitorData)).toArray(String[]::new));
                     String[] museumWithoutId = Arrays.copyOfRange(museum, 1, museum.length);
                     finalMuseums.add(Stream.concat(Arrays.stream(museumWithoutId), Arrays.stream(visitorData)).toArray(String[]::new));
 
@@ -158,7 +163,6 @@ public class Import {
                 writer.writeNext(museum, false);
             }
             writer.close();
-            System.out.println("finito");
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -266,8 +266,8 @@ public class MuseeStatsDAO {
 
             while (rs.next()) {
                 regionThemes
-                    .computeIfAbsent(rs.getString("region"), k -> new HashMap<>())
-                    .put(rs.getString("domaine_thematique"), rs.getInt("nb"));
+                        .computeIfAbsent(rs.getString("region"), k -> new HashMap<>())
+                        .put(rs.getString("domaine_thematique"), rs.getInt("nb"));
             }
         } catch (SQLException e) {
             System.err.println("Erreur diversiteCulturelle : " + e.getMessage());
@@ -296,8 +296,15 @@ public class MuseeStatsDAO {
      * @return map région → indice de Gini
      */
     public Map<String, Double> giniEntreesParRegion() {
-        String sql = "SELECT region, COALESCE(total,0) AS total " +
-                     "FROM public.musee WHERE total > 0 ORDER BY region, total";
+        String sql = """
+        SELECT
+            COALESCE(r.region_musee, m.region) AS region,
+            COALESCE(m.total, 0) AS total
+        FROM public.musee m
+        """ + REGION_JOIN + """
+        WHERE m.total > 0
+        ORDER BY COALESCE(r.region_musee, m.region), m.total
+        """;
 
         Map<String, List<Long>> regionEntrees = new LinkedHashMap<>();
         try (Connection conn = DatabaseConfig.getConnection();
@@ -306,8 +313,8 @@ public class MuseeStatsDAO {
 
             while (rs.next()) {
                 regionEntrees
-                    .computeIfAbsent(rs.getString("region"), k -> new ArrayList<>())
-                    .add(rs.getLong("total"));
+                        .computeIfAbsent(rs.getString("region"), k -> new ArrayList<>())
+                        .add(rs.getLong("total"));
             }
         } catch (SQLException e) {
             System.err.println("Erreur giniEntrees : " + e.getMessage());
@@ -369,7 +376,8 @@ public class MuseeStatsDAO {
 
             while (rs.next()) {
                 Carte carte = mapCarte(rs);
-                String key = carte.getRegion() + "|" + carte.getDomaineThematique();
+                String regionResolue = resoudreRegion(carte);
+                String key = regionResolue + "|" + carte.getDomaineThematique();
                 double rareteScore = rareteMap.getOrDefault(key, 0.0);
                 if (rareteScore > 0.9 && carte.getRarete() == Rarete.COMMUN) {
                     carte.setRarete(Rarete.RARE);
@@ -477,9 +485,16 @@ public class MuseeStatsDAO {
     }
 
     private Map<String, Double> computeRareteThematique() {
-        String sql = "SELECT region, domaine_thematique, COUNT(*) AS nb " +
-                     "FROM public.musee WHERE domaine_thematique IS NOT NULL " +
-                     "GROUP BY region, domaine_thematique";
+        String sql = """
+        SELECT
+            COALESCE(r.region_musee, m.region) AS region,
+            m.domaine_thematique,
+            COUNT(*) AS nb
+        FROM public.musee m
+        """ + REGION_JOIN + """
+        WHERE m.domaine_thematique IS NOT NULL
+        GROUP BY COALESCE(r.region_musee, m.region), m.domaine_thematique
+        """;
 
         Map<String, Integer> themeCount  = new HashMap<>();
         Map<String, Integer> regionCount = new HashMap<>();
@@ -522,4 +537,17 @@ public class MuseeStatsDAO {
     }
 
     private static int safeInt(Integer v) { return v == null ? 0 : v; }
+
+    private String resoudreRegion(Carte carte) {
+        if (!"DROM".equals(carte.getRegion())) return carte.getRegion();
+        return switch (carte.getDepartement() == null ? "" : carte.getDepartement()) {
+            case "Guadeloupe"  -> "Guadeloupe";
+            case "Martinique"  -> "Martinique";
+            case "Guyane"      -> "Guyane";
+            case "La Réunion",
+                 "Réunion"     -> "La Réunion";
+            case "Mayotte"     -> "Mayotte";
+            default            -> carte.getRegion();
+        };
+    }
 }

@@ -249,11 +249,15 @@ public class MuseeStatsDAO {
      */
     public Map<String, Double> diversiteCulturelleParRegion() {
         String sql = """
-            SELECT region, domaine_thematique, COUNT(*) AS nb
-            FROM public.musee
-            WHERE domaine_thematique IS NOT NULL
-            GROUP BY region, domaine_thematique
-            """;
+        SELECT
+            COALESCE(r.region_musee, m.region) AS region,
+            m.domaine_thematique,
+            COUNT(*) AS nb
+        FROM public.musee m
+        """ + REGION_JOIN + """
+        WHERE m.domaine_thematique IS NOT NULL
+        GROUP BY COALESCE(r.region_musee, m.region), m.domaine_thematique
+        """;
 
         Map<String, Map<String, Integer>> regionThemes = new LinkedHashMap<>();
         try (Connection conn = DatabaseConfig.getConnection();
@@ -396,7 +400,7 @@ public class MuseeStatsDAO {
             COALESCE(SUM(m.total),   0)  AS total_entrees
         FROM public.musee m
         """ + REGION_JOIN + """
-        GROUP BY m.region, r.pop_jeune, r.total_general
+        GROUP BY COALESCE(r.region_musee, m.region), r.pop_jeune, r.total_general
         HAVING SUM(m.total) > 0
         """;
 

@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import auth.DatabaseConfig;
+import config.Config;
 
 /**
  * Classe BoosterDAO
@@ -15,7 +16,7 @@ import auth.DatabaseConfig;
 public class BoosterDAO {
 
 
-    // Vérifie si le joueur a ouvert moins de 3 boosters aujourd'hui
+    // Vérifie si le joueur a ouvert moins de NBR_BOOSTER_MAX boosters aujourd'hui
     public boolean peutOuvrirBooster(int userId) {
         String sql = "SELECT nombre_ouverts FROM public.limite_booster WHERE user_id = ? AND date_ouverture = CURRENT_DATE";
 
@@ -25,7 +26,7 @@ public class BoosterDAO {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     int ouvertsAujourdhui = rs.getInt("nombre_ouverts");
-                    return ouvertsAujourdhui < 3; // Renvoie vrai si strictement inférieur à 3
+                    return ouvertsAujourdhui < Config.NBR_BOOSTER_MAX;
                 }
                 // Si aucune ligne n'est trouvée pour aujourd'hui, c'est qu'il en a ouvert 0
                 return true;

@@ -20,7 +20,9 @@ public class Main {
         AuthService authService = new AuthService();
         User joueur = authService.login("leon", "mdp123");
         Booster booster = new Booster(EnumRegion.ILE_DE_FRANCE);
-        booster.ouvrirBooster(joueur);
+        List<Carte> cartesObtenues = booster.ouvrirBooster(joueur);
+        System.out.println("Vous avez obtenu les cartes suivantes :");
+        cartesObtenues.forEach(c -> System.out.println(c.getNomOfficiel()));
 
         // ══════════════════════════════════════════════════════════════
 // TEST MuseeStatsDAO

@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import config.Config;
+
 /**
  * Classe User
  *
@@ -44,7 +46,7 @@ public class User {
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
                     int ouvertsAujourdhui = rs.getInt("nombre_ouverts");
-                    return 3-ouvertsAujourdhui;
+                    return Config.NBR_BOOSTER_MAX - ouvertsAujourdhui;
                 }
                 return 0;
             }

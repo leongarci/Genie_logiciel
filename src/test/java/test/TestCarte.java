@@ -1,10 +1,13 @@
 package test;
 
+import org.junit.jupiter.api.Test;
+
 import carte.Carte;
 import carte.Rarete;
 
 public class TestCarte {
 
+    @Test
     public void testNewCarte() {
         Carte carte = new Carte(1, "Musée du Louvre", "Paris", "Arts", "Histoire du musée", "Atout 1", "Intérêt 1", Rarete.COMMUN);
 
@@ -18,6 +21,7 @@ public class TestCarte {
         assert carte.getRarete() == Rarete.COMMUN;
     }
 
+    @Test
     public void testSettersEtGetters() {
         Carte carte = new Carte(1, "Carte initiale", "Paris", "Arts", "Histoire", "Atout", "Intérêt", Rarete.RARE);
 
@@ -72,6 +76,7 @@ public class TestCarte {
         assert carte.getRarete() == Rarete.EPIQUE;
     }
 
+    @Test
     public void testGetThemes() {
         Carte carte = new Carte(1, "Carte", "Paris", "Arts décoratifs, Ethnologie , Histoire", "Histoire", "Atout", "Intérêt", Rarete.LEGENDAIRE);
 
@@ -81,6 +86,7 @@ public class TestCarte {
         assert carte.getThemes()[2].equals("Histoire");
     }
 
+    @Test
     public void testGetThemesAvecGuillemets() {
         Carte carte = new Carte(1, "Carte", "Paris", "\"Arts décoratifs, Ethnologie\"", "Histoire", "Atout", "Intérêt", Rarete.COMMUN);
 
@@ -89,12 +95,14 @@ public class TestCarte {
         assert carte.getThemes()[1].equals("Ethnologie");
     }
 
+    @Test
     public void testToString() {
         Carte carte = new Carte(7, "Musée de Cluny", "Paris", "Moyen Âge", "Histoire", "Atout", "Intérêt", Rarete.RARE);
 
         assert carte.toString().equals("Carte: Musée de Cluny (Paris) - Type: Moyen Âge");
     }
 
+    @Test
     public void testNullIntegersParDefaut() {
         Carte carte = new Carte(1, "Carte", "Paris", "Arts", "Histoire", "Atout", "Intérêt", Rarete.COMMUN);
 

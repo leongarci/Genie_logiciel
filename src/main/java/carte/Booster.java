@@ -52,8 +52,8 @@ public class Booster {
             }
 
             Carte c = museeDAO.getRandomCarteByRarete(rareteTiree);
-            System.out.println(c.toString() + " " + rareteTiree.toString());
             if (c != null) {
+                System.out.println(c.toString() + " " + rareteTiree.toString());
                 cartes.add(c);
                 idsTires.add(c.getIdentifiant());
             }

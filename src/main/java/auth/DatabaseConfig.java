@@ -1,5 +1,9 @@
 package auth;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import io.github.cdimascio.dotenv.Dotenv;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -11,11 +15,23 @@ import java.sql.SQLException;
  */
 public class DatabaseConfig {
 
-    private static final String URL = "jdbc:postgresql://my-astre.com:5433/dbGenie";
-    private static final String USER = "userGenie";
-    private static final String PASSWORD = "passwordGenie1234";
+    private static final Dotenv dotenv = Dotenv.load();
 
+    private static final String URL = dotenv.get("DB_URL");
+    private static final String USER = dotenv.get("DB_USER");
+    private static final String PASSWORD = dotenv.get("DB_PASSWORD");
+
+
+    private static final HikariDataSource ds;
+    static {
+        HikariConfig cfg = new HikariConfig();
+        cfg.setJdbcUrl(System.getenv("DB_URL"));
+        cfg.setUsername(System.getenv("DB_USER"));
+        cfg.setPassword(System.getenv("DB_PASSWORD"));
+        cfg.setMaximumPoolSize(10);
+        ds = new HikariDataSource(cfg);
+    }
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+        return ds.getConnection();
     }
 }

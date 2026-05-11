@@ -11,68 +11,21 @@ import java.util.stream.Collectors;
 
 public class MuseeStatsDAO {
 
-    /**
-     * Stats agrégées par région (entrées + démographie).
-     * Jointure sur newreg_l pour récupérer richesse et population
-     * directement depuis la table region.
-     */
-
-    private static final String REGION_JOIN = """
-    LEFT JOIN (
-        SELECT total_general, richesse,
-               COALESCE(age_0_4 + age_5_9 + age_10_14
-                        + age_15_19 + age_20_24, 0) AS pop_jeune,
-               CASE newreg_l
-                   WHEN '01 - Guadeloupe'                   THEN 'Guadeloupe'
-                   WHEN '02 - Martinique'                   THEN 'Martinique'
-                   WHEN '03 - Guyane'                       THEN 'Guyane'
-                   WHEN '04 - La Réunion'                   THEN 'La Réunion'
-                   WHEN '06 - Mayotte'                      THEN 'Mayotte'
-                   WHEN '11 - Île-de-France'                THEN 'Ile-de-France'
-                   WHEN '24 - Centre-Val de Loire'          THEN 'Centre-Val de Loire'
-                   WHEN '27 - Bourgogne-Franche-Comté'      THEN 'Bourgogne-Franche-Comté'
-                   WHEN '28 - Normandie'                    THEN 'Normandie'
-                   WHEN '32 - Hauts-de-France'              THEN 'Hauts-de-France'
-                   WHEN '44 - Grand Est'                    THEN 'Grand Est'
-                   WHEN '52 - Pays de la Loire'             THEN 'Pays-de-la-Loire'
-                   WHEN '53 - Bretagne'                     THEN 'Bretagne'
-                   WHEN '75 - Nouvelle-Aquitaine'           THEN 'Nouvelle-Aquitaine'
-                   WHEN '76 - Occitanie'                    THEN 'Occitanie'
-                   WHEN '84 - Auvergne-Rhône-Alpes'         THEN 'Auvergne-Rhône-Alpes'
-                   WHEN '93 - Provence-Alpes-Côte d''Azur'  THEN 'Provence-Alpes-Côte d''Azur'
-                   WHEN '94 - Corse'                        THEN 'Corse'
-               END AS region_musee
-        FROM public.region
-    ) r ON r.region_musee = CASE
-        WHEN m.region != 'DROM' THEN m.region
-        WHEN m.departement = 'Guadeloupe'  THEN 'Guadeloupe'
-        WHEN m.departement = 'Martinique'  THEN 'Martinique'
-        WHEN m.departement = 'Guyane'      THEN 'Guyane'
-        WHEN m.departement = 'La Réunion'  THEN 'La Réunion'
-        WHEN m.departement = 'Réunion'     THEN 'La Réunion'
-        WHEN m.departement = 'Mayotte'     THEN 'Mayotte'
-        ELSE NULL
-    END
-    """;
-
     public List<RegionStats> getRegionStats() {
         String sql = """
             SELECT
-                COALESCE(r.region_musee, m.region) AS region,
-                COALESCE(r.total_general, 0)           AS population,
-                COALESCE(r.richesse, 0)                AS revenu,
-                COUNT(*)                               AS nb_musees,
-                COALESCE(SUM(m.total),   0)            AS total_entrees,
-                COALESCE(SUM(m.payant),  0)            AS entrees_payantes,
-                COALESCE(SUM(m.gratuit), 0)            AS entrees_gratuites,
-                COALESCE(SUM(m.moins_18_ans_hors_scolaires), 0)
-                    + COALESCE(SUM(m._18_25_ans), 0)   AS entrees_jeunes,
-                COALESCE(SUM(m.scolaires), 0)          AS entrees_scolaires
-            FROM public.musee m
-            """
-            + REGION_JOIN +
-            """
-            GROUP BY COALESCE(r.region_musee, m.region), r.total_general, r.richesse
+                region_resolved                                                AS region,
+                COALESCE(total_general, 0)                                     AS population,
+                COALESCE(richesse, 0)                                          AS revenu,
+                COUNT(*)                                                       AS nb_musees,
+                COALESCE(SUM(total),   0)                                      AS total_entrees,
+                COALESCE(SUM(payant),  0)                                      AS entrees_payantes,
+                COALESCE(SUM(gratuit), 0)                                      AS entrees_gratuites,
+                COALESCE(SUM(moins_18_ans_hors_scolaires), 0)
+                    + COALESCE(SUM(_18_25_ans), 0)                             AS entrees_jeunes,
+                COALESCE(SUM(scolaires), 0)                                    AS entrees_scolaires
+            FROM public.musee_avec_region
+            GROUP BY region_resolved, total_general, richesse
             ORDER BY total_entrees DESC
             """;
 
@@ -151,8 +104,6 @@ public class MuseeStatsDAO {
 
     /**
      * Corrélation richesse / taux de gratuité.
-     * "Les régions les plus riches sont-elles celles
-     *  où la part d'entrées gratuites est la plus élevée ?"
      *
      * @return map région → [richesse, tauxGratuite]
      */
@@ -171,7 +122,6 @@ public class MuseeStatsDAO {
 
     /**
      * Corrélation richesse / entrées par habitant.
-     * "Les habitants des régions riches vont-ils davantage au musée ?"
      *
      * @return map région → [richesse, entreesParHabitant]
      */
@@ -190,9 +140,6 @@ public class MuseeStatsDAO {
 
     /**
      * Top N musées accessibles aux jeunes, ajusté par richesse régionale.
-     * "Quels musées attirent le plus de jeunes même dans des régions à faible revenu ?"
-     * Score = tauxJeunes × (29 000 / richesseRégion)
-     * Valeur > 1 = musée atypiquement accessible aux jeunes vs. son contexte régional.
      *
      * @return liste de paires (Carte, score) triée par score décroissant
      */
@@ -242,22 +189,19 @@ public class MuseeStatsDAO {
 
     /**
      * Diversité culturelle (indice de Shannon normalisé) par région.
-     * "Les régions riches ont-elles une offre muséale plus diversifiée ?"
-     * H normalisé ∈ [0, 1] — 1 = tous les thèmes également représentés.
      *
      * @return map région → indice de Shannon normalisé
      */
     public Map<String, Double> diversiteCulturelleParRegion() {
         String sql = """
-        SELECT
-            COALESCE(r.region_musee, m.region) AS region,
-            m.domaine_thematique,
-            COUNT(*) AS nb
-        FROM public.musee m
-        """ + REGION_JOIN + """
-        WHERE m.domaine_thematique IS NOT NULL
-        GROUP BY COALESCE(r.region_musee, m.region), m.domaine_thematique
-        """;
+            SELECT
+                region_resolved    AS region,
+                domaine_thematique,
+                COUNT(*)           AS nb
+            FROM public.musee_avec_region
+            WHERE domaine_thematique IS NOT NULL
+            GROUP BY region_resolved, domaine_thematique
+            """;
 
         Map<String, Map<String, Integer>> regionThemes = new LinkedHashMap<>();
         try (Connection conn = DatabaseConfig.getConnection();
@@ -289,22 +233,18 @@ public class MuseeStatsDAO {
 
     /**
      * Indice de Gini des entrées intra-région.
-     * "Dans les régions riches, les entrées sont-elles concentrées
-     *  sur 1-2 musées phares ou bien réparties équitablement ?"
-     * Gini = 0 : égalité parfaite. Gini = 1 : un musée capte tout.
      *
      * @return map région → indice de Gini
      */
     public Map<String, Double> giniEntreesParRegion() {
         String sql = """
-        SELECT
-            COALESCE(r.region_musee, m.region) AS region,
-            COALESCE(m.total, 0) AS total
-        FROM public.musee m
-        """ + REGION_JOIN + """
-        WHERE m.total > 0
-        ORDER BY COALESCE(r.region_musee, m.region), m.total
-        """;
+            SELECT
+                region_resolved        AS region,
+                COALESCE(total, 0)     AS total
+            FROM public.musee_avec_region
+            WHERE total > 0
+            ORDER BY region_resolved, total
+            """;
 
         Map<String, List<Long>> regionEntrees = new LinkedHashMap<>();
         try (Connection conn = DatabaseConfig.getConnection();
@@ -327,10 +267,6 @@ public class MuseeStatsDAO {
 
     /**
      * Effet de levier touristique par région.
-     * "Certaines régions moins riches génèrent-elles autant de visites
-     *  par habitant qu'une région riche ?"
-     * Ratio = (entrées/habitant) / (richesse / 29 000)
-     * Valeur > 1 = sur-performance touristique vs. niveau de vie.
      *
      * @return map région → ratio de levier touristique
      */
@@ -349,9 +285,6 @@ public class MuseeStatsDAO {
 
     /**
      * Musées avec score de rareté thématique.
-     * "Ce musée est-il le seul de son thème dans sa région ?"
-     * rarete = 1 - (nb musées même thème région / nb musées région)
-     * Un musée COMMUN en entrées mais unique thématiquement est upgradé à RARE.
      *
      * @return liste de Carte avec Rarete éventuellement upgradée
      */
@@ -392,25 +325,21 @@ public class MuseeStatsDAO {
 
     /**
      * Corrélation population jeune / entrées scolaires par région.
-     * "Les régions avec une population jeune plus importante
-     *  ont-elles proportionnellement plus d'entrées scolaires ?"
-     * Exploite les colonnes age_* de la table region.
      *
      * @return map région → [tauxPopJeune (0-24 ans / total), tauxEntreesScolaires]
      */
     public Map<String, double[]> correlationPopulationJeuneEntreesScolaires() {
         String sql = """
-        SELECT
-            COALESCE(r.region_musee, m.region) AS region,
-            COALESCE(r.pop_jeune,    0) AS pop_jeune,
-            COALESCE(r.total_general,0) AS pop_totale,
-            COALESCE(SUM(m.scolaires),0) AS entrees_scolaires,
-            COALESCE(SUM(m.total),   0)  AS total_entrees
-        FROM public.musee m
-        """ + REGION_JOIN + """
-        GROUP BY COALESCE(r.region_musee, m.region), r.pop_jeune, r.total_general
-        HAVING SUM(m.total) > 0
-        """;
+            SELECT
+                region_resolved                      AS region,
+                COALESCE(pop_jeune,     0)            AS pop_jeune,
+                COALESCE(total_general, 0)            AS pop_totale,
+                COALESCE(SUM(scolaires), 0)           AS entrees_scolaires,
+                COALESCE(SUM(total),     0)           AS total_entrees
+            FROM public.musee_avec_region
+            GROUP BY region_resolved, pop_jeune, total_general
+            HAVING SUM(total) > 0
+            """;
 
         Map<String, double[]> result = new LinkedHashMap<>();
         try (Connection conn = DatabaseConfig.getConnection();
@@ -486,15 +415,14 @@ public class MuseeStatsDAO {
 
     private Map<String, Double> computeRareteThematique() {
         String sql = """
-        SELECT
-            COALESCE(r.region_musee, m.region) AS region,
-            m.domaine_thematique,
-            COUNT(*) AS nb
-        FROM public.musee m
-        """ + REGION_JOIN + """
-        WHERE m.domaine_thematique IS NOT NULL
-        GROUP BY COALESCE(r.region_musee, m.region), m.domaine_thematique
-        """;
+            SELECT
+                region_resolved    AS region,
+                domaine_thematique,
+                COUNT(*)           AS nb
+            FROM public.musee_avec_region
+            WHERE domaine_thematique IS NOT NULL
+            GROUP BY region_resolved, domaine_thematique
+            """;
 
         Map<String, Integer> themeCount  = new HashMap<>();
         Map<String, Integer> regionCount = new HashMap<>();

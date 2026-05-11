@@ -23,7 +23,7 @@ public class Main {
         booster.ouvrirBooster(joueur);
 
         // ══════════════════════════════════════════════════════════════
-// TEST MuseeStatsDAO — à coller dans votre main() temporairement
+// TEST MuseeStatsDAO
 // ══════════════════════════════════════════════════════════════
 
         MuseeStatsDAO statsDAO = new MuseeStatsDAO();

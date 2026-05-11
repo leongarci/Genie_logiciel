@@ -16,10 +16,49 @@ public class MuseeStatsDAO {
      * Jointure sur newreg_l pour récupérer richesse et population
      * directement depuis la table region.
      */
+
+    private static final String REGION_JOIN = """
+    LEFT JOIN (
+        SELECT total_general, richesse,
+               COALESCE(age_0_4 + age_5_9 + age_10_14
+                        + age_15_19 + age_20_24, 0) AS pop_jeune,
+               CASE newreg_l
+                   WHEN '01 - Guadeloupe'                   THEN 'Guadeloupe'
+                   WHEN '02 - Martinique'                   THEN 'Martinique'
+                   WHEN '03 - Guyane'                       THEN 'Guyane'
+                   WHEN '04 - La Réunion'                   THEN 'La Réunion'
+                   WHEN '06 - Mayotte'                      THEN 'Mayotte'
+                   WHEN '11 - Île-de-France'                THEN 'Ile-de-France'
+                   WHEN '24 - Centre-Val de Loire'          THEN 'Centre-Val de Loire'
+                   WHEN '27 - Bourgogne-Franche-Comté'      THEN 'Bourgogne-Franche-Comté'
+                   WHEN '28 - Normandie'                    THEN 'Normandie'
+                   WHEN '32 - Hauts-de-France'              THEN 'Hauts-de-France'
+                   WHEN '44 - Grand Est'                    THEN 'Grand Est'
+                   WHEN '52 - Pays de la Loire'             THEN 'Pays-de-la-Loire'
+                   WHEN '53 - Bretagne'                     THEN 'Bretagne'
+                   WHEN '75 - Nouvelle-Aquitaine'           THEN 'Nouvelle-Aquitaine'
+                   WHEN '76 - Occitanie'                    THEN 'Occitanie'
+                   WHEN '84 - Auvergne-Rhône-Alpes'         THEN 'Auvergne-Rhône-Alpes'
+                   WHEN '93 - Provence-Alpes-Côte d''Azur'  THEN 'Provence-Alpes-Côte d''Azur'
+                   WHEN '94 - Corse'                        THEN 'Corse'
+               END AS region_musee
+        FROM public.region
+    ) r ON r.region_musee = CASE
+        WHEN m.region != 'DROM' THEN m.region
+        WHEN m.departement = 'Guadeloupe'  THEN 'Guadeloupe'
+        WHEN m.departement = 'Martinique'  THEN 'Martinique'
+        WHEN m.departement = 'Guyane'      THEN 'Guyane'
+        WHEN m.departement = 'La Réunion'  THEN 'La Réunion'
+        WHEN m.departement = 'Réunion'     THEN 'La Réunion'
+        WHEN m.departement = 'Mayotte'     THEN 'Mayotte'
+        ELSE NULL
+    END
+    """;
+
     public List<RegionStats> getRegionStats() {
         String sql = """
             SELECT
-                m.region,
+                COALESCE(r.region_musee, m.region) AS region,
                 COALESCE(r.total_general, 0)           AS population,
                 COALESCE(r.richesse, 0)                AS revenu,
                 COUNT(*)                               AS nb_musees,
@@ -30,8 +69,10 @@ public class MuseeStatsDAO {
                     + COALESCE(SUM(m._18_25_ans), 0)   AS entrees_jeunes,
                 COALESCE(SUM(m.scolaires), 0)          AS entrees_scolaires
             FROM public.musee m
-            LEFT JOIN public.region r ON r.newreg_l = m.region
-            GROUP BY m.region, r.total_general, r.richesse
+            """
+            + REGION_JOIN +
+            """
+            GROUP BY COALESCE(r.region_musee, m.region), r.total_general, r.richesse
             ORDER BY total_entrees DESC
             """;
 
@@ -347,19 +388,17 @@ public class MuseeStatsDAO {
      */
     public Map<String, double[]> correlationPopulationJeuneEntreesScolaires() {
         String sql = """
-            SELECT
-                m.region,
-                COALESCE(r.age_0_4  + r.age_5_9  + r.age_10_14
-                       + r.age_15_19 + r.age_20_24, 0)   AS pop_jeune,
-                COALESCE(r.total_general, 0)              AS pop_totale,
-                COALESCE(SUM(m.scolaires), 0)             AS entrees_scolaires,
-                COALESCE(SUM(m.total),     0)             AS total_entrees
-            FROM public.musee m
-            LEFT JOIN public.region r ON r.newreg_l = m.region
-            GROUP BY m.region, r.age_0_4, r.age_5_9, r.age_10_14,
-                     r.age_15_19, r.age_20_24, r.total_general
-            HAVING SUM(m.total) > 0
-            """;
+        SELECT
+            COALESCE(r.region_musee, m.region) AS region,
+            COALESCE(r.pop_jeune,    0) AS pop_jeune,
+            COALESCE(r.total_general,0) AS pop_totale,
+            COALESCE(SUM(m.scolaires),0) AS entrees_scolaires,
+            COALESCE(SUM(m.total),   0)  AS total_entrees
+        FROM public.musee m
+        """ + REGION_JOIN + """
+        GROUP BY m.region, r.pop_jeune, r.total_general
+        HAVING SUM(m.total) > 0
+        """;
 
         Map<String, double[]> result = new LinkedHashMap<>();
         try (Connection conn = DatabaseConfig.getConnection();

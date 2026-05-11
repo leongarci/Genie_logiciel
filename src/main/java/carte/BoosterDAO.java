@@ -14,6 +14,7 @@ import auth.DatabaseConfig;
  */
 public class BoosterDAO {
 
+
     // Vérifie si le joueur a ouvert moins de 3 boosters aujourd'hui
     public boolean peutOuvrirBooster(int userId) {
         String sql = "SELECT nombre_ouverts FROM public.limite_booster WHERE user_id = ? AND date_ouverture = CURRENT_DATE";

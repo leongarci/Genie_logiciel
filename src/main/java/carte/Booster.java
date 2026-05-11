@@ -88,6 +88,22 @@ public class Booster {
         return true;
     }
 
+    public boolean ouvrirBooster(User joueur,EnumRegion region) {
+        if (joueur == null || idsTires.isEmpty()) {
+            System.err.println("Erreur : Joueur non connecté ou booster vide.");
+            return false;
+        }
+        BoosterDAO boosterDAO = new BoosterDAO();
+        if (!boosterDAO.peutOuvrirBooster(joueur.getId())) {
+            System.out.println("Désolé " + joueur.getLogin() + ", vous avez déjà ouvert vos 3 boosters aujourd'hui ! Revenez demain.");
+            return false;
+        }
+        collectionDAO.ajouterCartes(joueur.getId(), idsTires);
+        boosterDAO.enregistrerOuverture(joueur.getId());
+        System.out.println("Booster ouvert avec succès par " + joueur.getLogin() + " !");
+        return true;
+    }
+
     // Récupération des cartes du booster
     public List<Carte> getCartes() {
         return cartes;

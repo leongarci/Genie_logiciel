@@ -18,19 +18,25 @@ public class MapPage extends JPanel {
     private final int BORDER_SIZE = 75;
     private boolean BACK_BUTTON_HOVER = false;
 
+    // --- CONSTANTES DE RÉFÉRENCE POUR LE RESPONSIVE ---
+    // C'est la taille du panneau quand la fenêtre fait 850x600
+    private final double BASE_WIDTH = 834.0;
+    private final double BASE_HEIGHT = 552.0;
+
     public MapPage(Interface parent) {
         this.anInterface = parent;
         setLayout(null);
         setOpaque(false);
 
-        // --- CHARGEMENT SÉCURISÉ DE L'IMAGE (Compatible Maven & IDE) ---
-        // On cherche d'abord dans le classpath (src/main/resources/images/...)
-        java.net.URL imgURL = getClass().getResource("/images/carte-inventory-Photoroom.png");
+        // Chargement de l'image (Triple sécurité)
+        java.net.URL imgURL = getClass().getResource("/Interface/Page/Images/carte-inventory-Photoroom.png");
+        if (imgURL == null) {
+            imgURL = getClass().getResource("Images/carte-inventory-Photoroom.png");
+        }
         if (imgURL != null) {
             franceMap = new ImageIcon(imgURL).getImage();
         } else {
-            // Option de secours si le dossier resources est resté à la racine du projet
-            franceMap = new ImageIcon("resources/images/carte-inventory-Photoroom.png").getImage();
+            franceMap = new ImageIcon("src/main/java/Interface/Page/Images/carte-inventory-Photoroom.png").getImage();
         }
 
         initRegions();
@@ -38,7 +44,7 @@ public class MapPage extends JPanel {
     }
 
     private void initRegions() {
-        // Coordonnées X,Y des balises sur l'écran (à ajuster une fois l'image visible !)
+        // Tes coordonnées actuelles (calibrées sur l'écran de base)
         regionPoints.put("Île-de-France", new Point(430, 220));
         regionPoints.put("Bretagne", new Point(200, 260));
         regionPoints.put("Provence-Alpes-Côte d'Azur", new Point(600, 480));
@@ -59,6 +65,15 @@ public class MapPage extends JPanel {
         regionPoints.put("Martinique", new Point(20, 230));
     }
 
+    /**
+     * Calcule la position d'un point proportionnellement à la taille actuelle du panneau
+     */
+    private Point getScaledPoint(Point originalPoint) {
+        int scaledX = (int) (originalPoint.x * (getWidth() / BASE_WIDTH));
+        int scaledY = (int) (originalPoint.y * (getHeight() / BASE_HEIGHT));
+        return new Point(scaledX, scaledY);
+    }
+
     private void setupMouseListeners() {
         MouseAdapter mouseHandler = new MouseAdapter() {
             @Override
@@ -73,11 +88,12 @@ public class MapPage extends JPanel {
                     return;
                 }
 
-                // Clic sur une région
+                // Clic sur une région (on vérifie avec les points mis à l'échelle)
                 for (Map.Entry<String, Point> entry : regionPoints.entrySet()) {
-                    Point p = entry.getValue();
-                    if (p.distance(x, y) < 25) { // Rayon de tolérance du clic
+                    Point scaledP = getScaledPoint(entry.getValue());
+                    if (scaledP.distance(x, y) < 25) {
                         anInterface.showInventoryForRegion(entry.getKey());
+                        break;
                     }
                 }
             }
@@ -96,10 +112,11 @@ public class MapPage extends JPanel {
                     repaintNeeded = true;
                 }
 
-                // Curseur main sur les régions
+                // Curseur main sur les régions (avec les points mis à l'échelle)
                 boolean onRegion = false;
                 for (Point p : regionPoints.values()) {
-                    if (p.distance(x, y) < 25) {
+                    Point scaledP = getScaledPoint(p);
+                    if (scaledP.distance(x, y) < 25) {
                         onRegion = true;
                         break;
                     }
@@ -126,12 +143,10 @@ public class MapPage extends JPanel {
         g2d.setColor(new Color(0, 52, 21));
         g2d.fillRoundRect(0, 0, width, height, 15, 15);
 
-        // Dessin de la carte en arrière-plan COMPLET (prend toute la place)
+        // Dessin de la carte en arrière-plan COMPLET
         if (franceMap != null) {
             g2d.drawImage(franceMap, 0, 0, width, height, this);
         }
-
-        // [SUPPRIMÉ] Les lignes de séparation de 3px ont été enlevées ici
 
         // Bouton RETOUR "<"
         int backBtnY = (BORDER_SIZE - SIZE_BACK_BUTTON) / 2;
@@ -145,20 +160,21 @@ public class MapPage extends JPanel {
         FontMetrics fm = g2d.getFontMetrics();
         g2d.drawString("<", MARGIN_BACK + (SIZE_BACK_BUTTON - fm.stringWidth("<")) / 2, backBtnY + ((SIZE_BACK_BUTTON - fm.getHeight()) / 2) + fm.getAscent());
 
-        // Dessin des balises de régions
+        // Dessin des balises de régions ADAPTATIVES
         g2d.setFont(new Font("Arial", Font.BOLD, 14));
         for (Map.Entry<String, Point> entry : regionPoints.entrySet()) {
-            Point p = entry.getValue();
+            // On récupère le point recalculé pour la taille d'écran actuelle
+            Point scaledP = getScaledPoint(entry.getValue());
 
             // Point repère (Bouton Or)
             g2d.setColor(new Color(162, 108, 39));
-            g2d.fillOval(p.x - 8, p.y - 8, 16, 16);
+            g2d.fillOval(scaledP.x - 8, scaledP.y - 8, 16, 16);
             g2d.setColor(Color.WHITE);
             g2d.setStroke(new BasicStroke(2f));
-            g2d.drawOval(p.x - 8, p.y - 8, 16, 16);
+            g2d.drawOval(scaledP.x - 8, scaledP.y - 8, 16, 16);
 
-            // Nom de la région
-            g2d.drawString(entry.getKey(), p.x + 15, p.y + 5);
+            // Nom de la région (suit le point)
+            g2d.drawString(entry.getKey(), scaledP.x + 15, scaledP.y + 5);
         }
     }
 }

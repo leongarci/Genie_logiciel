@@ -237,7 +237,32 @@ public class Carte {
 
     @Override
     public String toString() {
-        return "Carte: " + nomOfficiel + " (" + ville + ") - Type: " + domaineThematique;
+        return "Carte{" +
+                "identifiant=" + identifiant +
+                ", nomOfficiel='" + nomOfficiel + '\'' +
+                ", idmusofile='" + idmusofile + '\'' +
+                ", adresse='" + adresse + '\'' +
+                ", lieu='" + lieu + '\'' +
+                ", codePostal='" + codePostal + '\'' +
+                ", ville='" + ville + '\'' +
+                ", region='" + region + '\'' +
+                ", departement='" + departement + '\'' +
+                ", coordonnees='" + coordonnees + '\'' +
+                ", domaineThematique='" + domaineThematique + '\'' +
+                ", histoire='" + histoire + '\'' +
+                ", atout='" + atout + '\'' +
+                ", interet='" + interet + '\'' +
+                ", anneeCreation=" + anneeCreation +
+                ", payant=" + payant +
+                ", gratuit=" + gratuit +
+                ", total=" + total +
+                ", individuel=" + individuel +
+                ", scolaires=" + scolaires +
+                ", groupesHorsScolaires=" + groupesHorsScolaires +
+                ", moins18AnsHorsScolaires=" + moins18AnsHorsScolaires +
+                ", de18A25Ans=" + de18A25Ans +
+                ", rarete=" + rarete +
+                '}';
     }
 
     public Rarete getRarete() {

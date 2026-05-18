@@ -25,9 +25,10 @@ public class DatabaseConfig {
     private static final HikariDataSource ds;
     static {
         HikariConfig cfg = new HikariConfig();
-        cfg.setJdbcUrl(System.getenv("DB_URL"));
-        cfg.setUsername(System.getenv("DB_USER"));
-        cfg.setPassword(System.getenv("DB_PASSWORD"));
+        //System.out.println(URL + " / " + USER + " / " + PASSWORD);
+        cfg.setJdbcUrl(URL);
+        cfg.setUsername(USER);
+        cfg.setPassword(PASSWORD);
         cfg.setMaximumPoolSize(10);
         ds = new HikariDataSource(cfg);
     }

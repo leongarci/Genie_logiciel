@@ -1,6 +1,7 @@
 package carte;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -107,6 +108,15 @@ public class Booster {
 
     // Récupération des cartes du booster
     public List<Carte> getCartes() {
-        return cartes;
+        return Collections.unmodifiableList(cartes);
+    }
+
+    public static Rarete determinerRarete(int roll) {
+        if (roll < 0 || roll >= 100)
+            throw new IllegalArgumentException("roll doit être entre 0 et 99, obtenu : " + roll);
+        if (roll < 70) return Rarete.COMMUN;
+        if (roll < 90) return Rarete.RARE;
+        if (roll < 98) return Rarete.EPIQUE;
+        return Rarete.LEGENDAIRE;
     }
 }

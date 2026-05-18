@@ -1,7 +1,6 @@
 package Interface;
 
 import java.awt.CardLayout;
-
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -9,6 +8,7 @@ import Interface.Page.BoosterPage;
 import Interface.Page.HomePage;
 import Interface.Page.InventoryPage;
 import Interface.Page.LoginPage;
+import Interface.Page.MapPage;
 import auth.User;
 
 public class Interface {
@@ -17,9 +17,12 @@ public class Interface {
     private JPanel mainContentPanel;
     private User user;
 
+    // Garder une référence pour lui passer la région
+    private InventoryPage inventoryPage;
+
     public Interface() {
         SwingUtilities.invokeLater(() -> {
-            FlexibleModernWindow.WindowTheme theme = new FlexibleModernWindow.DarkTheme(); // Essaie LightTheme() pour tester la modularité !
+            FlexibleModernWindow.WindowTheme theme = new FlexibleModernWindow.DarkTheme();
             FlexibleModernWindow.setupMenuDesign(theme);
 
             cardLayout = new CardLayout();
@@ -28,14 +31,21 @@ public class Interface {
 
             LoginPage login = new LoginPage(this);
             mainContentPanel.add(login, "LOGIN");
+
             HomePage home = new HomePage(this);
             mainContentPanel.add(home, "HOME");
-            InventoryPage inventoryPage = new InventoryPage(this);
+
+            // Ajout de la page Carte
+            MapPage mapPage = new MapPage(this);
+            mainContentPanel.add(mapPage, "MAP");
+
+            inventoryPage = new InventoryPage(this);
             mainContentPanel.add(inventoryPage, "INVENTORY");
+
             BoosterPage boosterPage = new BoosterPage(this);
             mainContentPanel.add(boosterPage, "BOOSTER");
 
-            FlexibleModernWindow mainWindow = new FlexibleModernWindow("Mon Appli", mainContentPanel, theme, 850, 600, null, false);
+            FlexibleModernWindow mainWindow = new FlexibleModernWindow("Kulturo", mainContentPanel, theme, 850, 600, null, false);
             if (user != null) {
                 cardLayout.show(mainContentPanel, "HOME");
             } else {
@@ -55,5 +65,10 @@ public class Interface {
 
     public void show(String page) {
         cardLayout.show(mainContentPanel, page);
+    }
+
+    public void showInventoryForRegion(String region) {
+        inventoryPage.loadRegion(region);
+        show("INVENTORY");
     }
 }

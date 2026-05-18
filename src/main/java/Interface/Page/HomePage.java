@@ -101,8 +101,8 @@ public class HomePage extends JPanel implements MouseListener, MouseMotionListen
         int x = e.getX();
         int y = e.getY();
         if (x > xButton1 && x < xButton1+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
-            System.out.println("Inventory");
-            anInterface.show("INVENTORY");
+            System.out.println("Inventory -> Map");
+            anInterface.show("MAP"); // C'est ici qu'on change "INVENTORY" par "MAP"
         }else if (x > xButton2 && x < xButton2+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
             System.out.println("Booster");
             anInterface.show("BOOSTER");

@@ -1,7 +1,3 @@
--- Vue musee_avec_region
--- Résout la région normalisée et joint les données démographiques de la table region.
--- Remplace le REGION_JOIN répété dans MuseeStatsDAO.
-
 CREATE OR REPLACE VIEW public.musee_avec_region AS
 SELECT
     m.*,

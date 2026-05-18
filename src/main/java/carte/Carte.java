@@ -1,5 +1,7 @@
 package carte;
 
+import java.util.Arrays;
+
 /**
  * Classe Carte
  *
@@ -231,8 +233,12 @@ public class Carte {
     }
 
     public String[] getThemes() {
-        String[] res = this.domaineThematique.replace("\"", "").replace(" ", "").split(",");
-        return res;
+        if (domaineThematique == null || domaineThematique.isBlank()) {
+            return new String[0];
+        }
+        return Arrays.stream(domaineThematique.replace("\"", "").split(","))
+                .map(String::trim)
+                .toArray(String[]::new);
     }
 
     @Override

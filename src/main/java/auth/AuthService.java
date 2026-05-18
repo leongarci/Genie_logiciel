@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.mindrot.jbcrypt.BCrypt;
+import carte.BoosterDAO; // N'oublie pas l'import de ton DAO
 
 /**
  * Classe AuthService
@@ -18,7 +19,6 @@ public class AuthService {
     // Inscription d'un nouvel utilisateur
     public User inscrireUtilisateur(String login, String motDePasseClair) {
         String mdpHache = BCrypt.hashpw(motDePasseClair, BCrypt.gensalt());
-
         String sql = "INSERT INTO public.users (login, mdp) VALUES (?, ?)";
 
         try (Connection conn = DatabaseConfig.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -33,6 +33,10 @@ public class AuthService {
                     if (rs.next()) {
                         int nouvelId = rs.getInt(1);
                         System.out.println("Inscription réussie " + login);
+
+                        // CORRECTION : On initialise les boosters pour aujourd'hui
+                        new BoosterDAO().initialiserBoosterQuotidien(nouvelId);
+
                         return new User(nouvelId, login);
                     }
                 }
@@ -44,7 +48,6 @@ public class AuthService {
                 System.err.println("Erreur lors de l'inscription : " + e.getMessage());
             }
         }
-
         return null;
     }
 
@@ -63,6 +66,10 @@ public class AuthService {
 
                 if (BCrypt.checkpw(motDePasseSaisi, mdpHacheEnBase)) {
                     System.out.println("Connexion réussie");
+
+                    // CORRECTION : On s'assure que le compteur d'aujourd'hui existe
+                    new BoosterDAO().initialiserBoosterQuotidien(userId);
+
                     return new User(userId, pseudo);
                 } else {
                     System.out.println("Mot de passe incorrect.");
@@ -74,7 +81,6 @@ public class AuthService {
         } catch (SQLException e) {
             System.err.println("Erreur lors de la connexion : " + e.getMessage());
         }
-
         return null;
     }
 }

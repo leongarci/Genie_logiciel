@@ -54,4 +54,18 @@ public class BoosterDAO {
             System.err.println("Erreur enregistrement ouverture booster : " + e.getMessage());
         }
     }
+
+    // Initialise le compteur journalier à 0 s'il n'existe pas encore pour aujourd'hui
+    public void initialiserBoosterQuotidien(int userId) {
+        String sql = "INSERT INTO public.limite_booster (user_id, date_ouverture, nombre_ouverts) "
+                + "VALUES (?, CURRENT_DATE, 0) "
+                + "ON CONFLICT (user_id, date_ouverture) DO NOTHING";
+
+        try (Connection conn = DatabaseConfig.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Erreur initialisation booster quotidien : " + e.getMessage());
+        }
+    }
 }

@@ -18,17 +18,19 @@ public class MapPage extends JPanel {
     private final int BORDER_SIZE = 75;
     private boolean BACK_BUTTON_HOVER = false;
 
-    // --- CONSTANTES DE RÉFÉRENCE POUR LE RESPONSIVE ---
-    // C'est la taille du panneau quand la fenêtre fait 850x600
+    // --- CONSTANTES DE RÉFÉRENCE POUR LE RESPONSIVE & LE ZOOM ---
     private final double BASE_WIDTH = 834.0;
     private final double BASE_HEIGHT = 552.0;
+
+    // Règle la valeur ici pour agrandir/réduire l'image (1.20 = 20% plus grand)
+    private final double ZOOM_FACTOR = 1.18;
 
     public MapPage(Interface parent) {
         this.anInterface = parent;
         setLayout(null);
         setOpaque(false);
 
-        // Chargement de l'image (Triple sécurité)
+        // Chargement sécurisé de l'image
         java.net.URL imgURL = getClass().getResource("/Interface/Page/Images/carte-inventory-Photoroom.png");
         if (imgURL == null) {
             imgURL = getClass().getResource("Images/carte-inventory-Photoroom.png");
@@ -44,33 +46,48 @@ public class MapPage extends JPanel {
     }
 
     private void initRegions() {
-        // Tes coordonnées actuelles (calibrées sur l'écran de base)
-        regionPoints.put("Île-de-France", new Point(430, 220));
-        regionPoints.put("Bretagne", new Point(200, 260));
-        regionPoints.put("Provence-Alpes-Côte d'Azur", new Point(600, 480));
-        regionPoints.put("Nouvelle-Aquitaine", new Point(320, 420));
-        regionPoints.put("Occitanie", new Point(450, 490));
-        regionPoints.put("Grand Est", new Point(620, 230));
-        regionPoints.put("Reunion", new Point(600, 200));
-        regionPoints.put("Corse", new Point(670, 230));
-        regionPoints.put("Haut-De-France", new Point(520, 130));
-        regionPoints.put("Pays de la Loire", new Point(420, 30));
-        regionPoints.put("Normandie", new Point(120, 230));
-        regionPoints.put("Centre-Val-De-Loire", new Point(620, 420));
-        regionPoints.put("Mayotte", new Point(320, 430));
-        regionPoints.put("Guyane", new Point(450, 320));
-        regionPoints.put("Bourgogne-Franche-Comté", new Point(620, 230));
-        regionPoints.put("Auvergne-Rhône-Alpes", new Point(320, 130));
-        regionPoints.put("Guadeloupe", new Point(420, 69));
-        regionPoints.put("Martinique", new Point(20, 230));
+        // Coordonnées recalibrées visuellement pour le ZOOM_FACTOR = 1.18
+
+        // --- FRANCE MÉTROPOLITAINE ---
+        regionPoints.put("Haut-De-France", new Point(440, 120));
+        regionPoints.put("Normandie", new Point(375, 163));
+        regionPoints.put("Île-de-France", new Point(435, 180));
+        regionPoints.put("Grand Est", new Point(500, 190));
+        regionPoints.put("Bretagne", new Point(360, 180));
+        regionPoints.put("Pays de la Loire", new Point(350, 220));
+        regionPoints.put("Centre-Val-De-Loire", new Point(410, 260));
+        regionPoints.put("Bourgogne-Franche-Comté", new Point(500, 270));
+        regionPoints.put("Nouvelle-Aquitaine", new Point(350, 370));
+        regionPoints.put("Auvergne-Rhône-Alpes", new Point(480, 350));
+        regionPoints.put("Occitanie", new Point(420, 430));
+        regionPoints.put("Provence-Alpes-Côte d'Azur", new Point(530, 400));
+        regionPoints.put("Corse", new Point(560, 470));
+
+        // --- OUTRE-MER ---
+        regionPoints.put("Guyane", new Point(280, 390)); // Centré sur la grosse masse à gauche
+        regionPoints.put("Guadeloupe", new Point(190, 240)); // Aligné avec les petits points à l'ouest
+        regionPoints.put("Martinique", new Point(200, 280));
+        regionPoints.put("Reunion", new Point(620, 480));    // Aligné avec les points au sud-est
+        regionPoints.put("Mayotte", new Point(670, 480));
     }
 
     /**
      * Calcule la position d'un point proportionnellement à la taille actuelle du panneau
+     * EN PRENANT EN COMPTE LE FACTEUR DE ZOOM.
      */
     private Point getScaledPoint(Point originalPoint) {
-        int scaledX = (int) (originalPoint.x * (getWidth() / BASE_WIDTH));
-        int scaledY = (int) (originalPoint.y * (getHeight() / BASE_HEIGHT));
+        // Taille de l'image une fois zoomée
+        int imgW = (int) (getWidth() * ZOOM_FACTOR);
+        int imgH = (int) (getHeight() * ZOOM_FACTOR);
+
+        // Décalage pour centrer l'image qui déborde
+        int offsetX = (getWidth() - imgW) / 2;
+        int offsetY = (getHeight() - imgH) / 2;
+
+        // Calcul de la nouvelle coordonnée X, Y
+        int scaledX = offsetX + (int) (originalPoint.x * (imgW / BASE_WIDTH));
+        int scaledY = offsetY + (int) (originalPoint.y * (imgH / BASE_HEIGHT));
+
         return new Point(scaledX, scaledY);
     }
 
@@ -88,12 +105,12 @@ public class MapPage extends JPanel {
                     return;
                 }
 
-                // Clic sur une région (on vérifie avec les points mis à l'échelle)
+                // Clic sur une région
                 for (Map.Entry<String, Point> entry : regionPoints.entrySet()) {
                     Point scaledP = getScaledPoint(entry.getValue());
                     if (scaledP.distance(x, y) < 25) {
                         anInterface.showInventoryForRegion(entry.getKey());
-                        break;
+                        break; // On arrête la boucle si on a cliqué sur une région
                     }
                 }
             }
@@ -112,7 +129,7 @@ public class MapPage extends JPanel {
                     repaintNeeded = true;
                 }
 
-                // Curseur main sur les régions (avec les points mis à l'échelle)
+                // Curseur main sur les régions
                 boolean onRegion = false;
                 for (Point p : regionPoints.values()) {
                     Point scaledP = getScaledPoint(p);
@@ -143,9 +160,13 @@ public class MapPage extends JPanel {
         g2d.setColor(new Color(0, 52, 21));
         g2d.fillRoundRect(0, 0, width, height, 15, 15);
 
-        // Dessin de la carte en arrière-plan COMPLET
+        // --- DESSIN DE L'IMAGE ZOOMÉE ---
         if (franceMap != null) {
-            g2d.drawImage(franceMap, 0, 0, width, height, this);
+            int imgW = (int) (width * ZOOM_FACTOR);
+            int imgH = (int) (height * ZOOM_FACTOR);
+            int offsetX = (width - imgW) / 2;
+            int offsetY = (height - imgH) / 2;
+            g2d.drawImage(franceMap, offsetX, offsetY, imgW, imgH, this);
         }
 
         // Bouton RETOUR "<"
@@ -160,20 +181,21 @@ public class MapPage extends JPanel {
         FontMetrics fm = g2d.getFontMetrics();
         g2d.drawString("<", MARGIN_BACK + (SIZE_BACK_BUTTON - fm.stringWidth("<")) / 2, backBtnY + ((SIZE_BACK_BUTTON - fm.getHeight()) / 2) + fm.getAscent());
 
-        // Dessin des balises de régions ADAPTATIVES
+        // Dessin des balises de régions
         g2d.setFont(new Font("Arial", Font.BOLD, 14));
         for (Map.Entry<String, Point> entry : regionPoints.entrySet()) {
-            // On récupère le point recalculé pour la taille d'écran actuelle
             Point scaledP = getScaledPoint(entry.getValue());
 
-            // Point repère (Bouton Or)
+            // Cercle couleur Or
             g2d.setColor(new Color(162, 108, 39));
             g2d.fillOval(scaledP.x - 8, scaledP.y - 8, 16, 16);
+
+            // Contour Blanc
             g2d.setColor(Color.WHITE);
             g2d.setStroke(new BasicStroke(2f));
             g2d.drawOval(scaledP.x - 8, scaledP.y - 8, 16, 16);
 
-            // Nom de la région (suit le point)
+            // Nom de la région
             g2d.drawString(entry.getKey(), scaledP.x + 15, scaledP.y + 5);
         }
     }

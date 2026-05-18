@@ -51,24 +51,24 @@ public class MapPage extends JPanel {
         // --- FRANCE MÉTROPOLITAINE ---
         regionPoints.put("Haut-De-France", new Point(440, 120));
         regionPoints.put("Normandie", new Point(375, 163));
-        regionPoints.put("Île-de-France", new Point(435, 180));
+        regionPoints.put("Île-de-France", new Point(435, 176));
         regionPoints.put("Grand Est", new Point(500, 190));
-        regionPoints.put("Bretagne", new Point(360, 180));
-        regionPoints.put("Pays de la Loire", new Point(350, 220));
-        regionPoints.put("Centre-Val-De-Loire", new Point(410, 260));
-        regionPoints.put("Bourgogne-Franche-Comté", new Point(500, 270));
-        regionPoints.put("Nouvelle-Aquitaine", new Point(350, 370));
-        regionPoints.put("Auvergne-Rhône-Alpes", new Point(480, 350));
-        regionPoints.put("Occitanie", new Point(420, 430));
-        regionPoints.put("Provence-Alpes-Côte d'Azur", new Point(530, 400));
-        regionPoints.put("Corse", new Point(560, 470));
+        regionPoints.put("Bretagne", new Point(300, 193));
+        regionPoints.put("Pays de la Loire", new Point(365, 221));
+        regionPoints.put("Centre-Val-De-Loire", new Point(420, 235));
+        regionPoints.put("Bourgogne-Franche-Comté", new Point(490, 250));
+        regionPoints.put("Nouvelle-Aquitaine", new Point(385, 300));
+        regionPoints.put("Auvergne-Rhône-Alpes", new Point(480, 320));
+        regionPoints.put("Occitanie", new Point(420, 375));
+        regionPoints.put("Provence-Alpes-Côte d'Azur", new Point(530, 380));
+        regionPoints.put("Corse", new Point(589, 435));
 
         // --- OUTRE-MER ---
-        regionPoints.put("Guyane", new Point(280, 390)); // Centré sur la grosse masse à gauche
-        regionPoints.put("Guadeloupe", new Point(190, 240)); // Aligné avec les petits points à l'ouest
-        regionPoints.put("Martinique", new Point(200, 280));
-        regionPoints.put("Reunion", new Point(620, 480));    // Aligné avec les points au sud-est
-        regionPoints.put("Mayotte", new Point(670, 480));
+        regionPoints.put("Guyane", new Point(280, 375)); // Centré sur la grosse masse à gauche
+        regionPoints.put("Guadeloupe", new Point(238, 172)); // Aligné avec les petits points à l'ouest
+        regionPoints.put("Martinique", new Point(241, 220));
+        regionPoints.put("Reunion", new Point(536, 449));    // Aligné avec les points au sud-est
+        regionPoints.put("Mayotte", new Point(493, 462));
     }
 
     /**

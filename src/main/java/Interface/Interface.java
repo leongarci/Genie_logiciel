@@ -67,7 +67,6 @@ public class Interface {
         cardLayout.show(mainContentPanel, page);
     }
 
-    // Nouvelle méthode pour charger la région puis afficher l'inventaire
     public void showInventoryForRegion(String region) {
         inventoryPage.loadRegion(region);
         show("INVENTORY");

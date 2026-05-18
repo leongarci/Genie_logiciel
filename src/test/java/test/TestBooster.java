@@ -2,9 +2,6 @@ package test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import carte.Booster;
 import carte.Carte;
 import musee.EnumRegion;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBooster {
 
@@ -72,7 +71,7 @@ public class TestBooster {
     @DisplayName("Le booster retourne une liste non modifiable")
     public void testBoosterCartesImmutable() {
         List<Carte> cartes = booster.getCartes();
-        assertNotNull(cartes);
-        assertEquals(5, cartes.size());
+        assertThrows(UnsupportedOperationException.class, () -> cartes.add(null),
+                "La liste de cartes devrait être non-modifiable");
     }
 }

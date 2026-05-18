@@ -154,4 +154,12 @@ public class TestCarte {
         carte.setTotal(null);
         assertNull(carte.getTotal());
     }
+
+    @Test
+    @DisplayName("getThemes() avec domaine vide retourne tableau vide")
+    public void testGetThemesDomaineVide() {
+        Carte c = new Carte(1, "Carte", "Paris", "", "hist", "atout", "interet", Rarete.COMMUN);
+        String[] themes = c.getThemes();
+        assertEquals(0, themes.length); // va échouer si non géré dans Carte.java
+    }
 }

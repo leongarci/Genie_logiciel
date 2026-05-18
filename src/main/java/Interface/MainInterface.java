@@ -2,7 +2,7 @@ package Interface;
 
 public class MainInterface {
 
-    static void main() {
+    public static void main(String[] args) {
         new Interface();
     }
 }

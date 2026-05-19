@@ -12,6 +12,7 @@ import Interface.Interface;
 import auth.User;
 import carte.Carte;
 import carte.CartePossedee;
+import carte.Rarete;
 import collection.CollectionService;
 
 public class InventoryPage extends JPanel {
@@ -127,19 +128,40 @@ public class InventoryPage extends JPanel {
             if (isSameRegion(currentRegion, c.getRegion()) || isSameRegion(currentRegion, c.getDepartement())) {
 
                 String[] themes = c.getThemes();
-                if (themes == null || themes.length == 0) {
-                    groupedCards.computeIfAbsent("AUTRES", k -> new ArrayList<>()).add(cp);
-                } else {
-                    // Si la carte a plusieurs thèmes, elle s'affiche dans toutes les catégories concernées
-                    for (String theme : themes) {
-                        String category = normalizeCategory(theme);
-                        List<CartePossedee> list = groupedCards.computeIfAbsent(category, k -> new ArrayList<>());
-                        if (!list.contains(cp)) { // Évite les doublons
-                            list.add(cp);
-                        }
-                    }
+                String category = "AUTRES";
+
+                // On ne prend QUE le premier thème pour éviter les doublons
+                if (themes != null && themes.length > 0) {
+                    category = normalizeCategory(themes[0]);
+                }
+
+                List<CartePossedee> list = groupedCards.computeIfAbsent(category, k -> new ArrayList<>());
+                if (!list.contains(cp)) {
+                    list.add(cp);
                 }
             }
+        }
+
+        // --- TRI DES CARTES PAR RARETÉ (Commune -> Rare -> Epique -> Legendaire) ---
+        for (List<CartePossedee> list : groupedCards.values()) {
+            list.sort((cp1, cp2) -> Integer.compare(
+                    getRareteWeight(cp1.getCarte().getRarete()),
+                    getRareteWeight(cp2.getCarte().getRarete())
+            ));
+        }
+    }
+
+    /**
+     * Assigne un poids numérique aux raretés pour trier facilement
+     */
+    private int getRareteWeight(Rarete r) {
+        if (r == null) return 0;
+        switch (r) {
+            case COMMUN: return 1;
+            case RARE: return 2;
+            case EPIQUE: return 3;
+            case LEGENDAIRE: return 4;
+            default: return 0;
         }
     }
 
@@ -151,8 +173,17 @@ public class InventoryPage extends JPanel {
     }
 
     private String normalizeCategory(String dbTheme) {
-        if (dbTheme == null) return "AUTRES";
-        String t = dbTheme.toLowerCase();
+        if (dbTheme == null || dbTheme.isEmpty()) return "AUTRES";
+
+        // 1. On nettoie les guillemets éventuels
+        String themeNettoye = dbTheme.replace("\"", "");
+
+        // 2. On prend uniquement ce qui est avant la première virgule
+        String premiereCategorie = themeNettoye.split(",")[0].trim();
+
+        // 3. On normalise pour faire correspondre avec tes icônes
+        String t = premiereCategorie.toLowerCase();
+
         if (t.contains("archéologie") || t.contains("archeologie")) return "ARCHÉOLOGIE";
         if (t.contains("déco") || t.contains("deco")) return "ART DÉCORATIF";
         if (t.contains("beaux")) return "BEAUX ARTS";
@@ -161,6 +192,7 @@ public class InventoryPage extends JPanel {
         if (t.contains("ethnologie")) return "ETHNOLOGIE";
         if (t.contains("histoire")) return "HISTOIRE";
         if (t.contains("nature") || t.contains("science")) return "SCIENCES";
+
         return "AUTRES";
     }
 
@@ -206,7 +238,7 @@ public class InventoryPage extends JPanel {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         header.setOpaque(false);
 
-        // IMAGE CATÉGORIE (Prend en compte ton arborescence Images)
+        // IMAGE CATÉGORIE
         JLabel icon = new JLabel();
         try {
             java.net.URL imgURL = getClass().getResource("/Interface/Page/Images/cat_" + categoryName.toLowerCase().replaceAll("[ éè]", "_") + ".png");
@@ -220,7 +252,7 @@ public class InventoryPage extends JPanel {
         } catch (Exception e) { icon.setText("🔘"); }
 
         JLabel title = new JLabel(categoryName);
-        title.setFont(new Font("Arial", Font.BOLD, 26)); // Police similaire à la maquette
+        title.setFont(new Font("Arial", Font.BOLD, 26));
         title.setForeground(Color.WHITE);
 
         JButton toggleBtn = new JButton("▼");
@@ -242,7 +274,7 @@ public class InventoryPage extends JPanel {
                 g.fillRect(0, 5, getWidth() - 50, 2); // 50px de marge à droite
             }
         };
-        line.setMaximumSize(new Dimension(800, 15)); // Un peu de hauteur pour laisser respirer la ligne
+        line.setMaximumSize(new Dimension(800, 15));
         line.setOpaque(false);
 
         // --- CONTENU DES CARTES ---
@@ -310,7 +342,7 @@ public class InventoryPage extends JPanel {
         museumBtn.setBorderPainted(false);
         museumBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // ACTION CLIC : Affichage des infos
+        // ACTION CLIC : Affichage des infos (SANS l'image de la carte à droite)
         museumBtn.addActionListener(e -> {
             String qte = " (Possédé : " + cp.getQuantite() + ")";
             String details = "🏛️ MUSÉE : " + (carte.getNomOfficiel() != null ? carte.getNomOfficiel() : "N/A") + qte + "\n\n" +

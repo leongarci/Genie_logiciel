@@ -12,11 +12,6 @@ import carte.Carte;
 import carte.CartePossedee;
 import carte.Rarete;
 
-/**
- * Classe CollectionDAO
- *
- * Gère les opérations de base de données pour la collection de cartes
- */
 public class CollectionDAO {
 
     // Ajoute des cartes à la collection d'un utilisateur
@@ -48,11 +43,13 @@ public class CollectionDAO {
     // Récupère la collection de cartes d'un utilisateur
     public List<CartePossedee> getCollectionUtilisateur(int userId) {
         List<CartePossedee> maCollection = new ArrayList<>();
-        String sql = "SELECT m.identifiant, m.nom_officiel, m.ville, m.domaine_thematique, "
-                + "m.histoire, m.adresse, m.interet, m.total, c.quantite "
+        // CORRECTION : Ajout de m.region, m.departement et m.atout dans le SELECT
+        String sql = "SELECT m.identifiant, m.nom_officiel, m.ville, m.region, m.departement, m.domaine_thematique, "
+                + "m.histoire, m.adresse, m.atout, m.interet, m.total, c.quantite "
                 + "FROM public.collection c "
                 + "JOIN public.musee m ON c.musee_id = m.identifiant "
                 + "WHERE c.user_id = ?";
+
         try (Connection conn = DatabaseConfig.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
             ResultSet rs = pstmt.executeQuery();
@@ -68,16 +65,23 @@ public class CollectionDAO {
                 } else {
                     rareteCalculee = Rarete.LEGENDAIRE;
                 }
+
+                // CORRECTION : Création propre de la carte avec les bonnes colonnes
                 Carte carte = new Carte(
                         rs.getInt("identifiant"),
                         rs.getString("nom_officiel"),
                         rs.getString("ville"),
                         rs.getString("domaine_thematique"),
                         rs.getString("histoire"),
-                        rs.getString("adresse"),
+                        rs.getString("atout"),
                         rs.getString("interet"),
                         rareteCalculee
                 );
+                // On assigne manuellement les attributs manquants dans le constructeur
+                carte.setRegion(rs.getString("region"));
+                carte.setDepartement(rs.getString("departement"));
+                carte.setAdresse(rs.getString("adresse"));
+
                 int quantite = rs.getInt("quantite");
                 maCollection.add(new CartePossedee(carte, quantite));
             }

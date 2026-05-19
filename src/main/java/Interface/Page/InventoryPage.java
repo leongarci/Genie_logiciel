@@ -3,7 +3,7 @@ package Interface.Page;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.*;
@@ -25,7 +25,7 @@ public class InventoryPage extends JPanel {
     // Couleurs
     private final Color BACKGROUND_COLOR = new Color(0, 0, 0);
     private final Color BACKGROUND_SECONDARY_COLOR = new Color(0, 52, 21);
-    private final Color LINE_COLOR = new Color(86, 86, 86);
+    private final Color LINE_COLOR = new Color(255, 255, 255); // Lignes blanches comme la maquette
     private final Color TEXT_COLOR = new Color(255, 255, 255);
     private final Color RETURN_COLOR = new Color(32, 32, 57);
     private final Color RETURN_HOVER_COLOR = new Color(1, 1, 35);
@@ -38,7 +38,7 @@ public class InventoryPage extends JPanel {
 
     // Composants UI
     private JTextArea detailsArea;
-    private JScrollPane detailsScrollPane; // Ajouté pour faire défiler le long texte
+    private JScrollPane detailsScrollPane;
     private JPanel categoriesContainer;
     private JScrollPane scrollPane;
 
@@ -47,7 +47,8 @@ public class InventoryPage extends JPanel {
         setLayout(null);
         setOpaque(false);
 
-        groupedCards = new HashMap<>();
+        // On utilise un LinkedHashMap pour garder l'ordre d'insertion (Archéo en premier, etc.)
+        groupedCards = new LinkedHashMap<>();
 
         initUI();
         setupMouseListeners();
@@ -57,14 +58,13 @@ public class InventoryPage extends JPanel {
         // --- Panneau de détails (à droite dans la zone noire) ---
         detailsArea = new JTextArea();
         detailsArea.setEditable(false);
-        detailsArea.setOpaque(false); // Transparent pour voir le rectangle noir
+        detailsArea.setOpaque(false);
         detailsArea.setForeground(TEXT_COLOR);
         detailsArea.setFont(new Font("Arial", Font.PLAIN, 15));
         detailsArea.setLineWrap(true);
         detailsArea.setWrapStyleWord(true);
         detailsArea.setMargin(new Insets(10, 10, 10, 10));
 
-        // On enveloppe la zone de texte dans un ScrollPane (L'histoire peut être longue)
         detailsScrollPane = new JScrollPane(detailsArea);
         detailsScrollPane.setOpaque(false);
         detailsScrollPane.getViewport().setOpaque(false);
@@ -92,28 +92,27 @@ public class InventoryPage extends JPanel {
                 int w = getWidth();
                 int h = getHeight();
 
-                // Catégories (gauche)
-                scrollPane.setBounds(20, BORDER_SIZE + 20, (int)(w * 0.55) - 20, h - (BORDER_SIZE * 2) - 40);
+                // Catégories (gauche) prennent environ 55% de l'espace
+                scrollPane.setBounds(30, BORDER_SIZE + 20, (int)(w * 0.55) - 30, h - (BORDER_SIZE * 2) - 40);
 
                 // Détails (droite dans le rectangle noir)
                 int rectX = (int)(w * 0.60);
-                int rectY = BORDER_SIZE + 20;
+                int rectY = BORDER_SIZE + 10;
                 int rectW = w - rectX - 20;
-                int rectH = h - (BORDER_SIZE * 2) - 40;
+                int rectH = h - (BORDER_SIZE * 2) - 20;
                 detailsScrollPane.setBounds(rectX + 15, rectY + 15, rectW - 30, rectH - 30);
             }
         });
     }
 
-    // Appelée par l'Interface quand on clique sur une région sur la Map
+    // --- CHARGEMENT DYNAMIQUE DES CARTES ---
     public void loadRegion(String region) {
         this.currentRegion = region;
-        fetchAndFilterCards(); // Récupère les vraies cartes
+        fetchAndFilterCards();
         resetDetailsText();
         populateCategories();
     }
 
-    // --- LOGIQUE DE RÉCUPÉRATION DES CARTES ---
     private void fetchAndFilterCards() {
         groupedCards.clear();
         User user = anInterface.getUser();
@@ -124,15 +123,26 @@ public class InventoryPage extends JPanel {
 
         for (CartePossedee cp : allCards) {
             Carte c = cp.getCarte();
-            // On vérifie si la carte correspond à la région cliquée
-            if (isSameRegion(currentRegion, c.getRegion())) {
-                String category = normalizeCategory(c.getDomaineThematique());
-                groupedCards.computeIfAbsent(category, k -> new ArrayList<>()).add(cp);
+            // On vérifie la région ET le département (utile pour les DROM de l'Outre-Mer)
+            if (isSameRegion(currentRegion, c.getRegion()) || isSameRegion(currentRegion, c.getDepartement())) {
+
+                String[] themes = c.getThemes();
+                if (themes == null || themes.length == 0) {
+                    groupedCards.computeIfAbsent("AUTRES", k -> new ArrayList<>()).add(cp);
+                } else {
+                    // Si la carte a plusieurs thèmes, elle s'affiche dans toutes les catégories concernées
+                    for (String theme : themes) {
+                        String category = normalizeCategory(theme);
+                        List<CartePossedee> list = groupedCards.computeIfAbsent(category, k -> new ArrayList<>());
+                        if (!list.contains(cp)) { // Évite les doublons
+                            list.add(cp);
+                        }
+                    }
+                }
             }
         }
     }
 
-    // Normalise le nom de la région pour éviter les bugs (espaces, tirets, accents)
     private boolean isSameRegion(String mapRegion, String dbRegion) {
         if (mapRegion == null || dbRegion == null) return false;
         String n1 = mapRegion.toLowerCase().replaceAll("[-_ ]", "").replaceAll("[éèêë]", "e").replaceAll("[îï]", "i").replaceAll("[ôö]", "o").replaceAll("[àâä]", "a");
@@ -140,7 +150,6 @@ public class InventoryPage extends JPanel {
         return n1.equals(n2) || n1.contains(n2) || n2.contains(n1);
     }
 
-    // Assigne une grande catégorie selon les mots clés du domaine
     private String normalizeCategory(String dbTheme) {
         if (dbTheme == null) return "AUTRES";
         String t = dbTheme.toLowerCase();
@@ -151,34 +160,33 @@ public class InventoryPage extends JPanel {
         if (t.contains("moderne") || t.contains("contemporain")) return "ARTS MODERNE";
         if (t.contains("ethnologie")) return "ETHNOLOGIE";
         if (t.contains("histoire")) return "HISTOIRE";
+        if (t.contains("nature") || t.contains("science")) return "SCIENCES";
         return "AUTRES";
     }
 
     private void resetDetailsText() {
         detailsArea.setText("RÉGION : " + currentRegion.toUpperCase() + "\n\n" +
-                "Sélectionnez une carte dans le menu de gauche pour afficher les détails du musée.\n\n" +
-                "Cartes débloquées ici : " + countTotalCardsInRegion());
+                "Sélectionnez une carte dans le menu de gauche pour afficher les détails du musée.\n\n");
     }
 
-    private int countTotalCardsInRegion() {
-        int count = 0;
-        for (List<CartePossedee> list : groupedCards.values()) {
-            count += list.size();
-        }
-        return count;
-    }
-
-    // --- CRÉATION DE L'INTERFACE DE LISTE ---
+    // --- CRÉATION DE L'INTERFACE GAUCHE ---
     private void populateCategories() {
         categoriesContainer.removeAll();
 
-        // Afficher seulement les catégories pour lesquelles on a des cartes
-        for (Map.Entry<String, List<CartePossedee>> entry : groupedCards.entrySet()) {
-            categoriesContainer.add(createCategoryPanel(entry.getKey(), entry.getValue()));
-            categoriesContainer.add(Box.createRigidArea(new Dimension(0, 15)));
+        // On crée un ordre d'affichage fixe pour l'esthétique
+        String[] ordreCategories = {"ARCHÉOLOGIE", "ART DÉCORATIF", "BEAUX ARTS", "ARTS MODERNE", "ETHNOLOGIE", "HISTOIRE", "TECHNIQUE", "SCIENCES", "AUTRES"};
+
+        boolean aDesCartes = false;
+
+        for (String cat : ordreCategories) {
+            if (groupedCards.containsKey(cat)) {
+                aDesCartes = true;
+                categoriesContainer.add(createCategoryPanel(cat, groupedCards.get(cat)));
+                categoriesContainer.add(Box.createRigidArea(new Dimension(0, 20)));
+            }
         }
 
-        if (groupedCards.isEmpty()) {
+        if (!aDesCartes) {
             JLabel emptyLabel = new JLabel("Aucune carte débloquée pour cette région.");
             emptyLabel.setForeground(Color.LIGHT_GRAY);
             emptyLabel.setFont(new Font("Arial", Font.ITALIC, 18));
@@ -194,64 +202,61 @@ public class InventoryPage extends JPanel {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
 
-        // HEADER
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        // --- HEADER ---
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         header.setOpaque(false);
 
-        // IMAGE CATÉGORIE (EMPLACEMENT)
+        // IMAGE CATÉGORIE (Prend en compte ton arborescence Images)
         JLabel icon = new JLabel();
         try {
-            // Remplace ce chemin par ton vrai chemin d'images pour les catégories
-            java.net.URL imgURL = getClass().getResource("/Interface/Page/Images/cat_" + categoryName.toLowerCase().replace(" ", "_") + ".png");
+            java.net.URL imgURL = getClass().getResource("/Interface/Page/Images/cat_" + categoryName.toLowerCase().replaceAll("[ éè]", "_") + ".png");
             if(imgURL != null) {
-                ImageIcon ic = new ImageIcon(new ImageIcon(imgURL).getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+                ImageIcon ic = new ImageIcon(new ImageIcon(imgURL).getImage().getScaledInstance(45, 45, Image.SCALE_SMOOTH));
                 icon.setIcon(ic);
             } else {
-                icon.setText("🎨"); // Placeholder
-                icon.setFont(new Font("Arial", Font.PLAIN, 24));
+                icon.setText("🔘"); // Secours
+                icon.setFont(new Font("Arial", Font.PLAIN, 30));
             }
-        } catch (Exception e) {
-            icon.setText("🎨");
-        }
+        } catch (Exception e) { icon.setText("🔘"); }
 
-        JLabel title = new JLabel(categoryName + " (" + cards.size() + ")");
-        title.setFont(new Font("Arial", Font.BOLD, 22));
+        JLabel title = new JLabel(categoryName);
+        title.setFont(new Font("Arial", Font.BOLD, 26)); // Police similaire à la maquette
         title.setForeground(Color.WHITE);
 
         JButton toggleBtn = new JButton("▼");
         toggleBtn.setContentAreaFilled(false);
         toggleBtn.setBorderPainted(false);
         toggleBtn.setForeground(Color.GRAY);
+        toggleBtn.setFont(new Font("Arial", Font.BOLD, 18));
         toggleBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         header.add(icon);
         header.add(title);
         header.add(toggleBtn);
 
-        // CONTENU
-        JPanel content = new JPanel();
-        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-        content.setOpaque(false);
-        content.setVisible(false);
-
-        // Ligne de séparation
+        // --- LIGNE BLANCHE SOUS LE TITRE ---
         JPanel line = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 g.setColor(Color.WHITE);
-                g.fillRect(0, 0, getWidth(), 2);
+                g.fillRect(0, 5, getWidth() - 50, 2); // 50px de marge à droite
             }
         };
-        line.setMaximumSize(new Dimension(800, 2));
+        line.setMaximumSize(new Dimension(800, 15)); // Un peu de hauteur pour laisser respirer la ligne
         line.setOpaque(false);
 
-        content.add(Box.createRigidArea(new Dimension(0, 10)));
+        // --- CONTENU DES CARTES ---
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setOpaque(false);
+        content.setVisible(false); // Menu accordéon fermé par défaut
 
-        // Ajout des vraies cartes
+        content.add(Box.createRigidArea(new Dimension(0, 10)));
         for (CartePossedee cp : cards) {
             content.add(createCardItem(cp));
         }
 
+        // Actions du bouton
         toggleBtn.addActionListener(e -> {
             boolean isVisible = content.isVisible();
             content.setVisible(!isVisible);
@@ -259,8 +264,10 @@ public class InventoryPage extends JPanel {
             categoriesContainer.revalidate();
         });
 
+        // Clic sur le titre marche aussi !
         title.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) { toggleBtn.doClick(); }
+            public void mouseEntered(MouseEvent e) { title.setCursor(new Cursor(Cursor.HAND_CURSOR)); }
         });
 
         panel.add(header);
@@ -273,22 +280,18 @@ public class InventoryPage extends JPanel {
         Carte carte = cp.getCarte();
         JPanel item = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
         item.setOpaque(false);
+        item.add(Box.createRigidArea(new Dimension(50, 0))); // Indentation par rapport au titre
 
-        item.add(Box.createRigidArea(new Dimension(30, 0))); // Indentation
-
-        // IMAGE RARETÉ (EMPLACEMENT)
+        // IMAGE RARETÉ (bronze, argent, or, ultime)
         JLabel rarityIcon = new JLabel();
         try {
             String rareteStr = carte.getRarete() != null ? carte.getRarete().toString().toLowerCase() : "commun";
-            // Remplace ce chemin par tes icônes de rareté
             java.net.URL rImgURL = getClass().getResource("/Interface/Page/Images/rarity_" + rareteStr + ".png");
             if (rImgURL != null) {
                 ImageIcon rIcon = new ImageIcon(new ImageIcon(rImgURL).getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH));
                 rarityIcon.setIcon(rIcon);
             } else {
-                // Placeholder textuel basé sur la rareté
-                String symbol = rareteStr.equals("legendaire") ? "⭐" : rareteStr.equals("epique") ? "🟣" : rareteStr.equals("rare") ? "🔵" : "⚪";
-                rarityIcon.setText(symbol);
+                rarityIcon.setText("●");
                 rarityIcon.setForeground(Color.WHITE);
             }
         } catch (Exception e) {
@@ -296,37 +299,35 @@ public class InventoryPage extends JPanel {
             rarityIcon.setForeground(Color.WHITE);
         }
 
-        // Bouton Musée
+        // NOM DU MUSÉE
         String affichageNom = carte.getNomOfficiel() != null ? carte.getNomOfficiel() : "Musée Inconnu";
-        // On tronque le nom s'il est trop long pour la liste de gauche
-        if(affichageNom.length() > 40) affichageNom = affichageNom.substring(0, 37) + "...";
+        if(affichageNom.length() > 45) affichageNom = affichageNom.substring(0, 42) + "...";
 
         JButton museumBtn = new JButton(affichageNom.toUpperCase());
-        museumBtn.setFont(new Font("Arial", Font.PLAIN, 13));
+        museumBtn.setFont(new Font("Arial", Font.BOLD, 14));
         museumBtn.setContentAreaFilled(false);
         museumBtn.setForeground(Color.WHITE);
         museumBtn.setBorderPainted(false);
         museumBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // ACTION CLIC : Affichage des détails réels de la BDD
+        // ACTION CLIC : Affichage des infos
         museumBtn.addActionListener(e -> {
-            String details = "🏛️ MUSÉE : " + (carte.getNomOfficiel() != null ? carte.getNomOfficiel() : "N/A") + "\n\n" +
+            String qte = " (Possédé : " + cp.getQuantite() + ")";
+            String details = "🏛️ MUSÉE : " + (carte.getNomOfficiel() != null ? carte.getNomOfficiel() : "N/A") + qte + "\n\n" +
                     "⭐ RARETÉ : " + (carte.getRarete() != null ? carte.getRarete().toString() : "N/A") + "\n" +
-                    "🗃️ QUANTITÉ POSSÉDÉE : " + cp.getQuantite() + "\n" +
-                    "📍 VILLE : " + (carte.getVille() != null ? carte.getVille() : "N/A") + "\n" +
+                    "📍 VILLE : " + (carte.getVille() != null ? carte.getVille() : "N/A") + " (" + (carte.getDepartement() != null ? carte.getDepartement() : "") + ")\n" +
                     "🏠 ADRESSE : " + (carte.getAdresse() != null ? carte.getAdresse() : "N/A") + "\n\n" +
-                    "🎨 DOMAINE : " + (carte.getDomaineThematique() != null ? carte.getDomaineThematique() : "N/A") + "\n\n" +
-                    "📖 HISTOIRE :\n" + (carte.getHistoire() != null ? carte.getHistoire() : "Aucune information historique disponible.") + "\n\n" +
-                    "✨ ATOUTS / INTÉRÊT :\n" + (carte.getAtout() != null ? carte.getAtout() : "") + " " +
-                    (carte.getInteret() != null ? carte.getInteret() : "");
+                    "🎨 DOMAINE(S) : " + (carte.getDomaineThematique() != null ? carte.getDomaineThematique().replace("\"", "") : "N/A") + "\n\n" +
+                    "📖 HISTOIRE :\n" + (carte.getHistoire() != null ? carte.getHistoire().replace("\"", "") : "Aucune information historique disponible.") + "\n\n" +
+                    "✨ ATOUTS / INTÉRÊT :\n" + (carte.getAtout() != null ? carte.getAtout().replace("\"", "") : "") + " " +
+                    (carte.getInteret() != null ? carte.getInteret().replace("\"", "") : "");
 
             detailsArea.setText(details);
-            detailsArea.setCaretPosition(0); // Remonte le scroll tout en haut
+            detailsArea.setCaretPosition(0);
         });
 
         item.add(rarityIcon);
         item.add(museumBtn);
-
         return item;
     }
 
@@ -374,12 +375,12 @@ public class InventoryPage extends JPanel {
         g2d.setColor(BACKGROUND_COLOR);
         g2d.fillRoundRect(0, 0, w, h, 15, 15);
 
-        // Zone centrale
+        // Zone centrale verte
         g2d.setColor(BACKGROUND_SECONDARY_COLOR);
         g2d.fillRect(0, BORDER_SIZE, w, h - BORDER_SIZE * 2);
 
-        // Lignes de séparation
-        g2d.setColor(LINE_COLOR);
+        // Lignes de séparation haut et bas en gris foncé
+        g2d.setColor(new Color(86, 86, 86));
         g2d.setStroke(new BasicStroke(3f));
         g2d.drawLine(0, BORDER_SIZE, w, BORDER_SIZE);
         g2d.drawLine(0, h - BORDER_SIZE, w, h - BORDER_SIZE);
@@ -394,11 +395,11 @@ public class InventoryPage extends JPanel {
         FontMetrics fm = g2d.getFontMetrics();
         g2d.drawString("<", MARGIN_BACK + (SIZE_BACK_BUTTON - fm.stringWidth("<")) / 2, backBtnY + ((SIZE_BACK_BUTTON - fm.getHeight()) / 2) + fm.getAscent());
 
-        // RECTANGLE NOIR A DROITE
+        // RECTANGLE NOIR A DROITE (Panneau de détails)
         int rectX = (int)(w * 0.60);
-        int rectY = BORDER_SIZE + 20;
+        int rectY = BORDER_SIZE + 10;
         int rectW = w - rectX - 20;
-        int rectH = h - (BORDER_SIZE * 2) - 40;
+        int rectH = h - (BORDER_SIZE * 2) - 20;
 
         g2d.setColor(Color.BLACK);
         g2d.fillRoundRect(rectX, rectY, rectW, rectH, 25, 25);

@@ -15,16 +15,22 @@ public class HomePage extends JPanel implements MouseListener, MouseMotionListen
     private final Color BACKGROUND_SECONDARY_COLOR = new Color(0, 52, 21);
     private final Color TEXT_COLOR = new Color(255, 255, 255);
     private final Color LINE_COLOR = new Color(86, 86, 86);
+
+    // Couleurs des boutons
     private final Color INVENTORY_COLOR = new Color(162, 108, 39);
-    private final Color BOOSTER_COLOR = new Color(50, 28, 86);
     private final Color INVENTORY_HOVER_COLOR = new Color(112, 80, 28);
+    private final Color STATS_COLOR = new Color(28, 86, 120);
+    private final Color STATS_HOVER_COLOR = new Color(17, 51, 80);
+    private final Color BOOSTER_COLOR = new Color(50, 28, 86);
     private final Color BOOSTER_HOVER_COLOR = new Color(30, 17, 51);
+
     private final int WIDTH_BUTTON = 200;
     private final int HEIGHT_BUTTON = 45;
 
-    private boolean inventiryHover, boosterHover;
+    private boolean inventiryHover, statsHover, boosterHover;
 
     private final int BORDER_SIZE = 75;
+
     public HomePage(Interface anInterface) {
         super(null);
         this.anInterface = anInterface;
@@ -57,101 +63,86 @@ public class HomePage extends JPanel implements MouseListener, MouseMotionListen
         FontMetrics metrics = g2d.getFontMetrics(police);
         g2d.drawString("KULTURO", (getWidth() - metrics.stringWidth("KULTURO")) / 2, getHeight() / 2);
 
-        // --- DESSIN DES BOUTONS ---
-        g2d.setColor(LINE_COLOR);
+        // --- CALCUL DYNAMIQUE POUR 3 BOUTONS ---
+        int gap = (getWidth() - (3 * WIDTH_BUTTON)) / 4;
         int yButton = getHeight() - BORDER_SIZE - (HEIGHT_BUTTON / 2);
-        int xButton1 = (getWidth() / 3) - (WIDTH_BUTTON / 2);
-        g2d.fillRoundRect(xButton1, yButton, WIDTH_BUTTON, HEIGHT_BUTTON, 15, 15);
-        if (!inventiryHover) {
-            g2d.setColor(INVENTORY_COLOR);
-            setCursor(Cursor.getDefaultCursor());
-        }else {
-            g2d.setColor(INVENTORY_HOVER_COLOR);
+
+        int xButton1 = gap;
+        int xButton2 = xButton1 + WIDTH_BUTTON + gap;
+        int xButton3 = xButton2 + WIDTH_BUTTON + gap;
+
+        // Bouton 1 : INVENTORY
+        drawButton(g2d, xButton1, yButton, "INVENTORY", inventiryHover ? INVENTORY_HOVER_COLOR : INVENTORY_COLOR);
+
+        // Bouton 2 : STATS
+        drawButton(g2d, xButton2, yButton, "DONNÉES", statsHover ? STATS_HOVER_COLOR : STATS_COLOR);
+
+        // Bouton 3 : BOOSTER
+        drawButton(g2d, xButton3, yButton, "BOOSTER", boosterHover ? BOOSTER_HOVER_COLOR : BOOSTER_COLOR);
+
+        if(inventiryHover || statsHover || boosterHover) {
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        }
-        g2d.fillRoundRect(xButton1 + 3, yButton + 3, WIDTH_BUTTON - 6, HEIGHT_BUTTON - 6, 12, 12);
-        g2d.setColor(TEXT_COLOR);
-        police = new Font("Arial", Font.PLAIN, 20);
-        g2d.setFont(police);
-        g2d.drawString("INVENTORY", xButton1 + 3 + 5, yButton + 3 + 27);
-
-        g2d.setColor(LINE_COLOR);
-        int xButton2 = (2 * getWidth() / 3) - (WIDTH_BUTTON / 2);
-        g2d.fillRoundRect(xButton2, yButton, WIDTH_BUTTON, HEIGHT_BUTTON, 15, 15);
-
-        if (!boosterHover) {
-            g2d.setColor(BOOSTER_COLOR);
-            if (!inventiryHover) {
-                setCursor(Cursor.getDefaultCursor());
-            }
         } else {
-            g2d.setColor(BOOSTER_HOVER_COLOR);
-            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            setCursor(Cursor.getDefaultCursor());
         }
-        g2d.fillRoundRect(xButton2 + 3, yButton + 3, WIDTH_BUTTON - 6, HEIGHT_BUTTON - 6, 12, 12);
+    }
+
+    private void drawButton(Graphics2D g2d, int x, int y, String text, Color color) {
+        g2d.setColor(LINE_COLOR);
+        g2d.fillRoundRect(x, y, WIDTH_BUTTON, HEIGHT_BUTTON, 15, 15);
+        g2d.setColor(color);
+        g2d.fillRoundRect(x + 3, y + 3, WIDTH_BUTTON - 6, HEIGHT_BUTTON - 6, 12, 12);
+
         g2d.setColor(TEXT_COLOR);
-        g2d.drawString("BOOSTER", xButton2 + 3 + 5, yButton + 3 + 27);
+        Font police = new Font("Arial", Font.BOLD, 18);
+        g2d.setFont(police);
+        FontMetrics metrics = g2d.getFontMetrics(police);
+        int textX = x + (WIDTH_BUTTON - metrics.stringWidth(text)) / 2;
+        int textY = y + ((HEIGHT_BUTTON - metrics.getHeight()) / 2) + metrics.getAscent();
+        g2d.drawString(text, textX, textY);
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
+        int gap = (getWidth() - (3 * WIDTH_BUTTON)) / 4;
         int yButton = getHeight() - BORDER_SIZE - (HEIGHT_BUTTON / 2);
-        int xButton1 = (getWidth() / 3) - (WIDTH_BUTTON / 2);
-        int xButton2 = (2 * getWidth() / 3) - (WIDTH_BUTTON / 2);
+        int xButton1 = gap;
+        int xButton2 = xButton1 + WIDTH_BUTTON + gap;
+        int xButton3 = xButton2 + WIDTH_BUTTON + gap;
+
         int x = e.getX();
         int y = e.getY();
+
         if (x > xButton1 && x < xButton1+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
-            System.out.println("Inventory -> Map");
-            anInterface.show("MAP"); // C'est ici qu'on change "INVENTORY" par "MAP"
-        }else if (x > xButton2 && x < xButton2+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
-            System.out.println("Booster");
+            anInterface.show("MAP");
+        } else if (x > xButton2 && x < xButton2+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
+            anInterface.show("STATS");
+        } else if (x > xButton3 && x < xButton3+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
             anInterface.show("BOOSTER");
         }
-
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-        setCursor(Cursor.getDefaultCursor());
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
+        int gap = (getWidth() - (3 * WIDTH_BUTTON)) / 4;
         int yButton = getHeight() - BORDER_SIZE - (HEIGHT_BUTTON / 2);
-        int xButton1 = (getWidth() / 3) - (WIDTH_BUTTON / 2);
-        int xButton2 = (2 * getWidth() / 3) - (WIDTH_BUTTON / 2);
+        int xButton1 = gap;
+        int xButton2 = xButton1 + WIDTH_BUTTON + gap;
+        int xButton3 = xButton2 + WIDTH_BUTTON + gap;
+
         int x = e.getX();
         int y = e.getY();
-        if (x > xButton1 && x < xButton1+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
-            inventiryHover = true;
-            repaint();
-        }else if (x > xButton2 && x < xButton2+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON) {
-            boosterHover = true;
-            repaint();
-        }else {
-            inventiryHover = false;
-            boosterHover = false;
-            repaint();
-        }
+
+        inventiryHover = (x > xButton1 && x < xButton1+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON);
+        statsHover = (x > xButton2 && x < xButton2+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON);
+        boosterHover = (x > xButton3 && x < xButton3+WIDTH_BUTTON && y > yButton && y < yButton+HEIGHT_BUTTON);
+
+        repaint();
     }
+
+    @Override public void mousePressed(MouseEvent e) {}
+    @Override public void mouseReleased(MouseEvent e) {}
+    @Override public void mouseEntered(MouseEvent e) { setCursor(Cursor.getDefaultCursor()); }
+    @Override public void mouseExited(MouseEvent e) {}
+    @Override public void mouseDragged(MouseEvent e) {}
 }

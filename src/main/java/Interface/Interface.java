@@ -8,7 +8,8 @@ import Interface.Page.BoosterPage;
 import Interface.Page.HomePage;
 import Interface.Page.InventoryPage;
 import Interface.Page.LoginPage;
-import Interface.Page.MapPage;
+import Interface.Page.MapPage; // N'oublie pas l'import de MapPage
+import Interface.Page.StatsPage;
 import auth.User;
 
 public class Interface {
@@ -17,7 +18,7 @@ public class Interface {
     private JPanel mainContentPanel;
     private User user;
 
-    // Garder une référence pour lui passer la région
+    // 1. On déclare la variable inventoryPage ici pour y avoir accès partout
     private InventoryPage inventoryPage;
 
     public Interface() {
@@ -35,15 +36,18 @@ public class Interface {
             HomePage home = new HomePage(this);
             mainContentPanel.add(home, "HOME");
 
-            // Ajout de la page Carte
             MapPage mapPage = new MapPage(this);
             mainContentPanel.add(mapPage, "MAP");
 
+            // 2. On instancie la variable (sans remettre le type devant)
             inventoryPage = new InventoryPage(this);
             mainContentPanel.add(inventoryPage, "INVENTORY");
 
             BoosterPage boosterPage = new BoosterPage(this);
             mainContentPanel.add(boosterPage, "BOOSTER");
+
+            StatsPage statsPage = new StatsPage(this);
+            mainContentPanel.add(statsPage, "STATS");
 
             FlexibleModernWindow mainWindow = new FlexibleModernWindow("Kulturo", mainContentPanel, theme, 850, 600, null, false);
             if (user != null) {
@@ -67,8 +71,11 @@ public class Interface {
         cardLayout.show(mainContentPanel, page);
     }
 
+    // 3. VOICI LA MÉTHODE MANQUANTE QUE MAP PAGE ESSAIE D'APPELER !
     public void showInventoryForRegion(String region) {
-        inventoryPage.loadRegion(region);
-        show("INVENTORY");
+        if (inventoryPage != null) {
+            inventoryPage.loadRegion(region); // Charge les cartes de la région
+            show("INVENTORY"); // Affiche la page inventaire
+        }
     }
 }

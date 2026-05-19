@@ -26,7 +26,7 @@ public class InventoryPage extends JPanel {
     // Couleurs
     private final Color BACKGROUND_COLOR = new Color(0, 0, 0);
     private final Color BACKGROUND_SECONDARY_COLOR = new Color(0, 52, 21);
-    private final Color LINE_COLOR = new Color(255, 255, 255); // Lignes blanches comme la maquette
+    private final Color LINE_COLOR = new Color(255, 255, 255);
     private final Color TEXT_COLOR = new Color(255, 255, 255);
     private final Color RETURN_COLOR = new Color(32, 32, 57);
     private final Color RETURN_HOVER_COLOR = new Color(1, 1, 35);
@@ -48,7 +48,7 @@ public class InventoryPage extends JPanel {
         setLayout(null);
         setOpaque(false);
 
-        // On utilise un LinkedHashMap pour garder l'ordre d'insertion (Archéo en premier, etc.)
+        // On utilise un LinkedHashMap pour garder l'ordre d'insertion
         groupedCards = new LinkedHashMap<>();
 
         initUI();
@@ -86,21 +86,24 @@ public class InventoryPage extends JPanel {
         add(scrollPane);
         add(detailsScrollPane);
 
-        // Positionnement réactif
+        // Positionnement réactif (Ratios cohérents)
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 int w = getWidth();
                 int h = getHeight();
 
-                // Catégories (gauche) prennent environ 55% de l'espace
-                scrollPane.setBounds(30, BORDER_SIZE + 20, (int)(w * 0.55) - 30, h - (BORDER_SIZE * 2) - 40);
+                // On utilise des pourcentages stricts pour que ça s'adapte parfaitement
+                int marginX = Math.max(20, (int)(w * 0.04));
+                int listWidth = (int)(w * 0.50); // 50% de la largeur pour la liste
 
-                // Détails (droite dans le rectangle noir)
-                int rectX = (int)(w * 0.60);
+                int rectX = (int)(w * 0.58); // Le bloc noir commence à 58%
+                int rectW = w - rectX - marginX; // Prend le reste de la place moins la marge
                 int rectY = BORDER_SIZE + 10;
-                int rectW = w - rectX - 20;
                 int rectH = h - (BORDER_SIZE * 2) - 20;
+
+                // Application des dimensions
+                scrollPane.setBounds(marginX, BORDER_SIZE + 20, listWidth, h - (BORDER_SIZE * 2) - 40);
                 detailsScrollPane.setBounds(rectX + 15, rectY + 15, rectW - 30, rectH - 30);
             }
         });
@@ -124,7 +127,7 @@ public class InventoryPage extends JPanel {
 
         for (CartePossedee cp : allCards) {
             Carte c = cp.getCarte();
-            // On vérifie la région ET le département (utile pour les DROM de l'Outre-Mer)
+            // On vérifie la région ET le département (utile pour les DROM)
             if (isSameRegion(currentRegion, c.getRegion()) || isSameRegion(currentRegion, c.getDepartement())) {
 
                 String[] themes = c.getThemes();
@@ -151,9 +154,6 @@ public class InventoryPage extends JPanel {
         }
     }
 
-    /**
-     * Assigne un poids numérique aux raretés pour trier facilement
-     */
     private int getRareteWeight(Rarete r) {
         if (r == null) return 0;
         switch (r) {
@@ -175,13 +175,8 @@ public class InventoryPage extends JPanel {
     private String normalizeCategory(String dbTheme) {
         if (dbTheme == null || dbTheme.isEmpty()) return "AUTRES";
 
-        // 1. On nettoie les guillemets éventuels
         String themeNettoye = dbTheme.replace("\"", "");
-
-        // 2. On prend uniquement ce qui est avant la première virgule
         String premiereCategorie = themeNettoye.split(",")[0].trim();
-
-        // 3. On normalise pour faire correspondre avec tes icônes
         String t = premiereCategorie.toLowerCase();
 
         if (t.contains("archéologie") || t.contains("archeologie")) return "ARCHÉOLOGIE";
@@ -197,7 +192,7 @@ public class InventoryPage extends JPanel {
     }
 
     private void resetDetailsText() {
-        detailsArea.setText("RÉGION : " + currentRegion.toUpperCase() + "\n\n" +
+        detailsArea.setText("• RÉGION : " + currentRegion.toUpperCase() + "\n\n" +
                 "Sélectionnez une carte dans le menu de gauche pour afficher les détails du musée.\n\n");
     }
 
@@ -205,9 +200,7 @@ public class InventoryPage extends JPanel {
     private void populateCategories() {
         categoriesContainer.removeAll();
 
-        // On crée un ordre d'affichage fixe pour l'esthétique
         String[] ordreCategories = {"ARCHÉOLOGIE", "ART DÉCORATIF", "BEAUX ARTS", "ARTS MODERNE", "ETHNOLOGIE", "HISTOIRE", "TECHNIQUE", "SCIENCES", "AUTRES"};
-
         boolean aDesCartes = false;
 
         for (String cat : ordreCategories) {
@@ -234,11 +227,9 @@ public class InventoryPage extends JPanel {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
 
-        // --- HEADER ---
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         header.setOpaque(false);
 
-        // IMAGE CATÉGORIE
         JLabel icon = new JLabel();
         try {
             java.net.URL imgURL = getClass().getResource("/Interface/Page/Images/cat_" + categoryName.toLowerCase().replaceAll("[ éè]", "_") + ".png");
@@ -246,7 +237,7 @@ public class InventoryPage extends JPanel {
                 ImageIcon ic = new ImageIcon(new ImageIcon(imgURL).getImage().getScaledInstance(45, 45, Image.SCALE_SMOOTH));
                 icon.setIcon(ic);
             } else {
-                icon.setText("🔘"); // Secours
+                icon.setText("🔘");
                 icon.setFont(new Font("Arial", Font.PLAIN, 30));
             }
         } catch (Exception e) { icon.setText("🔘"); }
@@ -266,29 +257,26 @@ public class InventoryPage extends JPanel {
         header.add(title);
         header.add(toggleBtn);
 
-        // --- LIGNE BLANCHE SOUS LE TITRE ---
         JPanel line = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 g.setColor(Color.WHITE);
-                g.fillRect(0, 5, getWidth() - 50, 2); // 50px de marge à droite
+                g.fillRect(0, 5, getWidth() - 50, 2);
             }
         };
         line.setMaximumSize(new Dimension(800, 15));
         line.setOpaque(false);
 
-        // --- CONTENU DES CARTES ---
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
-        content.setVisible(false); // Menu accordéon fermé par défaut
+        content.setVisible(false);
 
         content.add(Box.createRigidArea(new Dimension(0, 10)));
         for (CartePossedee cp : cards) {
             content.add(createCardItem(cp));
         }
 
-        // Actions du bouton
         toggleBtn.addActionListener(e -> {
             boolean isVisible = content.isVisible();
             content.setVisible(!isVisible);
@@ -296,7 +284,6 @@ public class InventoryPage extends JPanel {
             categoriesContainer.revalidate();
         });
 
-        // Clic sur le titre marche aussi !
         title.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) { toggleBtn.doClick(); }
             public void mouseEntered(MouseEvent e) { title.setCursor(new Cursor(Cursor.HAND_CURSOR)); }
@@ -312,9 +299,8 @@ public class InventoryPage extends JPanel {
         Carte carte = cp.getCarte();
         JPanel item = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
         item.setOpaque(false);
-        item.add(Box.createRigidArea(new Dimension(50, 0))); // Indentation par rapport au titre
+        item.add(Box.createRigidArea(new Dimension(50, 0)));
 
-        // IMAGE RARETÉ (bronze, argent, or, ultime)
         JLabel rarityIcon = new JLabel();
         try {
             String rareteStr = carte.getRarete() != null ? carte.getRarete().toString().toLowerCase() : "commun";
@@ -331,7 +317,6 @@ public class InventoryPage extends JPanel {
             rarityIcon.setForeground(Color.WHITE);
         }
 
-        // NOM DU MUSÉE
         String affichageNom = carte.getNomOfficiel() != null ? carte.getNomOfficiel() : "Musée Inconnu";
         if(affichageNom.length() > 45) affichageNom = affichageNom.substring(0, 42) + "...";
 
@@ -342,16 +327,16 @@ public class InventoryPage extends JPanel {
         museumBtn.setBorderPainted(false);
         museumBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // ACTION CLIC : Affichage des infos (SANS l'image de la carte à droite)
+        // Remplacement des emojis par des points standard "•"
         museumBtn.addActionListener(e -> {
             String qte = " (Possédé : " + cp.getQuantite() + ")";
-            String details = "🏛️ MUSÉE : " + (carte.getNomOfficiel() != null ? carte.getNomOfficiel() : "N/A") + qte + "\n\n" +
-                    "⭐ RARETÉ : " + (carte.getRarete() != null ? carte.getRarete().toString() : "N/A") + "\n" +
-                    "📍 VILLE : " + (carte.getVille() != null ? carte.getVille() : "N/A") + " (" + (carte.getDepartement() != null ? carte.getDepartement() : "") + ")\n" +
-                    "🏠 ADRESSE : " + (carte.getAdresse() != null ? carte.getAdresse() : "N/A") + "\n\n" +
-                    "🎨 DOMAINE(S) : " + (carte.getDomaineThematique() != null ? carte.getDomaineThematique().replace("\"", "") : "N/A") + "\n\n" +
-                    "📖 HISTOIRE :\n" + (carte.getHistoire() != null ? carte.getHistoire().replace("\"", "") : "Aucune information historique disponible.") + "\n\n" +
-                    "✨ ATOUTS / INTÉRÊT :\n" + (carte.getAtout() != null ? carte.getAtout().replace("\"", "") : "") + " " +
+            String details = "• MUSÉE : " + (carte.getNomOfficiel() != null ? carte.getNomOfficiel() : "N/A") + qte + "\n\n" +
+                    "• RARETÉ : " + (carte.getRarete() != null ? carte.getRarete().toString() : "N/A") + "\n" +
+                    "• VILLE : " + (carte.getVille() != null ? carte.getVille() : "N/A") + " (" + (carte.getDepartement() != null ? carte.getDepartement() : "") + ")\n" +
+                    "• ADRESSE : " + (carte.getAdresse() != null ? carte.getAdresse() : "N/A") + "\n\n" +
+                    "• DOMAINE(S) : " + (carte.getDomaineThematique() != null ? carte.getDomaineThematique().replace("\"", "") : "N/A") + "\n\n" +
+                    "• HISTOIRE :\n" + (carte.getHistoire() != null ? carte.getHistoire().replace("\"", "") : "Aucune information historique disponible.") + "\n\n" +
+                    "• ATOUTS / INTÉRÊT :\n" + (carte.getAtout() != null ? carte.getAtout().replace("\"", "") : "") + " " +
                     (carte.getInteret() != null ? carte.getInteret().replace("\"", "") : "");
 
             detailsArea.setText(details);
@@ -427,13 +412,12 @@ public class InventoryPage extends JPanel {
         FontMetrics fm = g2d.getFontMetrics();
         g2d.drawString("<", MARGIN_BACK + (SIZE_BACK_BUTTON - fm.stringWidth("<")) / 2, backBtnY + ((SIZE_BACK_BUTTON - fm.getHeight()) / 2) + fm.getAscent());
 
-        // RECTANGLE NOIR A DROITE (Panneau de détails)
-        int rectX = (int)(w * 0.60);
-        int rectY = BORDER_SIZE + 10;
-        int rectW = w - rectX - 20;
-        int rectH = h - (BORDER_SIZE * 2) - 20;
+        // RECTANGLE NOIR A DROITE (Panneau de détails) calculé avec les mêmes ratios
+        int marginX = Math.max(20, (int)(w * 0.04));
+        int rectX = (int)(w * 0.58);
+        int rectW = w - rectX - marginX;
 
         g2d.setColor(Color.BLACK);
-        g2d.fillRoundRect(rectX, rectY, rectW, rectH, 25, 25);
+        g2d.fillRoundRect(rectX, BORDER_SIZE + 10, rectW, h - (BORDER_SIZE * 2) - 20, 25, 25);
     }
 }

@@ -14,6 +14,7 @@ import musee.MuseeStatsDAO;
 public class StatsPage extends JPanel {
 
     private Interface anInterface;
+    private MuseeStatsDAO statsDAO;
 
     // Couleurs de base de l'application
     private final Color BACKGROUND_COLOR = new Color(0, 0, 0);
@@ -23,9 +24,13 @@ public class StatsPage extends JPanel {
     private final Color RETURN_COLOR = new Color(32, 32, 57);
     private final Color RETURN_HOVER_COLOR = new Color(1, 1, 35);
 
-    // Couleurs Funky pour les graphiques
+    // Palette Funky thématique pour les composants
     private final Color ACCENT_GOLD = new Color(162, 108, 39);
     private final Color ACCENT_BLUE = new Color(28, 86, 120);
+    private final Color ACCENT_GREEN = new Color(46, 204, 113);
+    private final Color ACCENT_ORANGE = new Color(230, 126, 34);
+    private final Color ACCENT_PINK = new Color(235, 104, 160);
+    private final Color ACCENT_PURPLE = new Color(142, 68, 173);
 
     private final int BORDER_SIZE = 75;
     private final int SIZE_BACK_BUTTON = 50;
@@ -35,8 +40,13 @@ public class StatsPage extends JPanel {
     private JPanel chartsContainer;
     private JScrollPane scrollPane;
 
+    // Composant dynamique pour le choix de la région
+    private JComboBox<String> regionSelector;
+    private ModernBarChart regionalTopChart;
+
     public StatsPage(Interface anInterface) {
         this.anInterface = anInterface;
+        this.statsDAO = new MuseeStatsDAO();
         setLayout(null);
         setOpaque(false);
 
@@ -49,13 +59,15 @@ public class StatsPage extends JPanel {
         chartsContainer = new JPanel();
         chartsContainer.setLayout(new BoxLayout(chartsContainer, BoxLayout.Y_AXIS));
         chartsContainer.setOpaque(false);
+        // Ajout d'une marge en haut pour faire respirer le premier graphique
+        chartsContainer.add(Box.createRigidArea(new Dimension(0, 20)));
 
         scrollPane = new JScrollPane(chartsContainer);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setBorder(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(25);
-        applyModernScrollBar(scrollPane); // <-- LIGNE AJOUTÉE ICI
+        scrollPane.getVerticalScrollBar().setUnitIncrement(28);
+        applyModernScrollBar(scrollPane);
 
         add(scrollPane);
 
@@ -68,32 +80,100 @@ public class StatsPage extends JPanel {
     }
 
     private void loadDataAndBuildCharts() {
-        MuseeStatsDAO statsDAO = new MuseeStatsDAO();
         chartsContainer.removeAll();
 
-        // --- 1. LE TOP 5 (Barres Modernes recalibrées) ---
+        // --- 1. TOP 5 NATIONAL (Barres) ---
         List<Carte> topMusees = statsDAO.getTopMuseesByValeur(5);
         Map<String, Double> mapTop = new LinkedHashMap<>();
         for (Carte c : topMusees) mapTop.put(c.getNomOfficiel(), (double) c.getTotal());
-        chartsContainer.add(new ModernBarChart("• LES GÉANTS (Entrées Totales Globales)", mapTop, ACCENT_GOLD));
+        chartsContainer.add(new ModernBarChart("• Les Établissements les Plus Visités de France (Fréquentation Nationale)", mapTop, ACCENT_GOLD));
         chartsContainer.add(Box.createRigidArea(new Dimension(0, 50)));
 
-        // --- 2. FOCUS SUR LE GINI (Jauges d'inégalité) ---
-        Map<String, Double> giniData = statsDAO.giniEntreesParRegion();
-        chartsContainer.add(new GiniMeterSection("• INDICE D'INÉGALITÉ DE FRÉQUENTATION (GINI GLOBAL)", giniData));
+        // --- 2. TOP 5 RÉGIONAL INTERACTIF (Barres avec JComboBox Dynamique) ---
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        filterPanel.setOpaque(false);
+        JLabel filterLabel = new JLabel("• Filtrer le Top 5 par région :");
+        filterLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        filterLabel.setForeground(Color.WHITE);
+
+        // Récupération dynamique de toutes les régions présentes en BDD !
+        Set<String> regionSet = statsDAO.giniEntreesParRegion().keySet();
+        List<String> regionList = new ArrayList<>(regionSet);
+        Collections.sort(regionList); // Tri alphabétique
+
+        regionSelector = new JComboBox<>(regionList.toArray(new String[0]));
+        regionSelector.setFont(new Font("Arial", Font.PLAIN, 14));
+        regionSelector.addActionListener(e -> updateRegionalChart());
+
+        filterPanel.add(filterLabel);
+        filterPanel.add(regionSelector);
+        chartsContainer.add(filterPanel);
+        chartsContainer.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        regionalTopChart = new ModernBarChart("Fréquentation Locale Détaillée", new LinkedHashMap<>(), ACCENT_BLUE);
+        chartsContainer.add(regionalTopChart);
+        if(regionSelector.getItemCount() > 0) {
+            updateRegionalChart(); // Premier chargement
+        }
         chartsContainer.add(Box.createRigidArea(new Dimension(0, 50)));
 
-        // --- 3. DIVERSITÉ CULTURELLE COMPLET (Donut Chart à 100%) ---
+        // --- 3. CORRÉLATION RICHESSE / GRATUITÉ (Nuage de Points) ---
+        Map<String, double[]> corrRichesseGratuite = statsDAO.correlationRichesseTauxGratuite();
+        chartsContainer.add(new ScatterChartPanel("• Analyse Richesse vs Gratuité (Revenu Médian vs Part d'Entrées Gratuites)", corrRichesseGratuite, "Revenu Fiscal Médian (€)", "Taux de Gratuité (0.0 à 1.0)", ACCENT_PINK));
+        chartsContainer.add(Box.createRigidArea(new Dimension(0, 50)));
+
+        // --- 4. CORRÉLATION RICHESSE / ENTRÉES PAR HABITANT (Nuage de Points) ---
+        Map<String, double[]> corrRichesseHabitant = statsDAO.correlationRichesseEntreesParHabitant();
+        chartsContainer.add(new ScatterChartPanel("• Intensité Culturelle (Revenu Médian vs Nombre de Visites par Habitant)", corrRichesseHabitant, "Revenu Fiscal Médian (€)", "Entrées par Habitant", ACCENT_BLUE));
+        chartsContainer.add(Box.createRigidArea(new Dimension(0, 50)));
+
+        // --- 5. CHAMPIONS DE LA JEUNESSE (Barres) ---
+        List<Map.Entry<Carte, Double>> topJeunes = statsDAO.topMuseesAccessiblesJeunes(5);
+        Map<String, Double> mapJeunes = new LinkedHashMap<>();
+        for (Map.Entry<Carte, Double> e : topJeunes) mapJeunes.put(e.getKey().getNomOfficiel(), e.getValue());
+        chartsContainer.add(new ModernBarChart("• Les Musées les Plus Accessibles aux Jeunes (Indice Ajusté par Richesse)", mapJeunes, ACCENT_GREEN));
+        chartsContainer.add(Box.createRigidArea(new Dimension(0, 50)));
+
+        // --- 6. DIVERSITÉ CULTURELLE (Barres) ---
         Map<String, Double> mapDiv = statsDAO.diversiteCulturelleParRegion();
-        chartsContainer.add(new DonutChartPanel("• RÉPARTITION DE LA DIVERSITÉ CULTURELLE GLOBALE", mapDiv));
+        chartsContainer.add(new ModernBarChart("• Indice de Diversité Thématique par Territoire (Indice de Shannon)", mapDiv, ACCENT_PURPLE));
         chartsContainer.add(Box.createRigidArea(new Dimension(0, 50)));
+
+        // --- 7. INDICE DE GINI (Jauges SANS limite) ---
+        Map<String, Double> giniData = statsDAO.giniEntreesParRegion();
+        chartsContainer.add(new GiniMeterSection("• Analyse des Monopoles : Inégalité de Fréquentation au Sein des Régions", giniData));
+        chartsContainer.add(Box.createRigidArea(new Dimension(0, 50)));
+
+        // --- 8. EFFET DE LEVIER TOURISTIQUE (Barres) ---
+        Map<String, Double> mapLevier = statsDAO.effetLevierTouristique();
+        chartsContainer.add(new ModernBarChart("• Indice d'Attractivité : L'Effet de Levier Touristique Régional", mapLevier, ACCENT_ORANGE));
+        chartsContainer.add(Box.createRigidArea(new Dimension(0, 50)));
+
+        // --- 9. RÉPARTITION DES ENTRÉES NATIONALES (L'Anneau Propre à 100%) ---
+        chartsContainer.add(new DonutChartPanel("• Structure Globale des Publics (Entrées Payantes vs Gratuites)"));
+        chartsContainer.add(Box.createRigidArea(new Dimension(0, 50)));
+
+        // --- 10. CORRÉLATION JEUNES / SCOLAIRES (Nuage de Points) ---
+        Map<String, double[]> corrJeunesScolaires = statsDAO.correlationPopulationJeuneEntreesScolaires();
+        chartsContainer.add(new ScatterChartPanel("• Impact Éducatif (Proportion de Population Jeune vs Taux d'Entrées Scolaires)", corrJeunesScolaires, "Part des 0-24 ans dans la population", "Taux d'Entrées Scolaires au Musée", ACCENT_GREEN));
+        chartsContainer.add(Box.createRigidArea(new Dimension(0, 20)));
 
         chartsContainer.revalidate();
         chartsContainer.repaint();
     }
 
+    private void updateRegionalChart() {
+        if(regionSelector.getSelectedItem() == null) return;
+        String selectedRegion = (String) regionSelector.getSelectedItem();
+        List<Carte> topRegional = statsDAO.getTopMuseesByRegion(selectedRegion, 5);
+        Map<String, Double> mapReg = new LinkedHashMap<>();
+        for (Carte c : topRegional) mapReg.put(c.getNomOfficiel(), (double) c.getTotal());
+
+        regionalTopChart.setData(mapReg);
+    }
+
     // ==========================================
-    // COMPOSANT 1 : BARRES MODERNES (SANS OVERLAP)
+    // COMPOSANT 1 : GRAPH COMPLET EN BARRES
     // ==========================================
     private class ModernBarChart extends JPanel {
         private String title;
@@ -103,8 +183,21 @@ public class StatsPage extends JPanel {
         public ModernBarChart(String title, Map<String, Double> data, Color color) {
             this.title = title; this.data = data; this.color = color;
             setOpaque(false);
-            setPreferredSize(new Dimension(700, 320));
-            setMaximumSize(new Dimension(2000, 320));
+            updateHeight();
+        }
+
+        public void setData(Map<String, Double> newData) {
+            this.data = newData;
+            updateHeight();
+            repaint();
+        }
+
+        private void updateHeight() {
+            int calculatedHeight = Math.max(160, 80 + (data.size() * 42));
+            setPreferredSize(new Dimension(700, calculatedHeight));
+            setMinimumSize(new Dimension(700, calculatedHeight));
+            setMaximumSize(new Dimension(2000, calculatedHeight));
+            if (getParent() != null) getParent().revalidate();
         }
 
         @Override
@@ -116,18 +209,25 @@ public class StatsPage extends JPanel {
             g2d.setFont(new Font("Arial", Font.BOLD, 18));
             g2d.drawString(title, 20, 30);
 
+            if (data.isEmpty()) {
+                g2d.setColor(Color.GRAY);
+                g2d.setFont(new Font("Arial", Font.ITALIC, 14));
+                g2d.drawString("Aucune donnée disponible pour cette sélection.", 40, 70);
+                return;
+            }
+
             double max = data.values().stream().mapToDouble(Double::doubleValue).max().orElse(1.0);
-            int y = 90; // Abaissé à 90 pour éviter tout chevauchement avec le titre
+            int y = 70;
             for (Map.Entry<String, Double> e : data.entrySet()) {
                 int barW = (int) ((e.getValue() / max) * (getWidth() - 420));
                 if (barW < 5) barW = 5;
 
-                g2d.setColor(new Color(0,0,0,100));
-                g2d.fillRoundRect(240, y+4, barW, 20, 10, 10);
+                g2d.setColor(new Color(0,0,0,120));
+                g2d.fillRoundRect(240, y+4, barW, 20, 8, 8);
 
                 GradientPaint gp = new GradientPaint(240, y, color, 240 + barW, y, color.brighter());
                 g2d.setPaint(gp);
-                g2d.fillRoundRect(240, y, barW, 20, 10, 10);
+                g2d.fillRoundRect(240, y, barW, 20, 8, 8);
 
                 g2d.setColor(Color.LIGHT_GRAY);
                 g2d.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -135,14 +235,97 @@ public class StatsPage extends JPanel {
                 g2d.drawString(label, 20, y + 15);
 
                 g2d.setColor(Color.WHITE);
-                g2d.drawString(String.format("%,d", e.getValue().intValue()), 250 + barW, y + 15);
+                String valStr = (e.getValue() == Math.floor(e.getValue())) ?
+                        String.format("%,d", e.getValue().intValue()) : String.format(Locale.US, "%.3f", e.getValue());
+                g2d.drawString(valStr, 250 + barW, y + 15);
                 y += 42;
             }
         }
     }
 
     // ==========================================
-    // COMPOSANT 2 : LE GINI-METER
+    // COMPOSANT 2 : NUAGES DE POINTS
+    // ==========================================
+    private class ScatterChartPanel extends JPanel {
+        private String title, xLabel, yLabel;
+        private Map<String, double[]> data;
+        private Color pointColor;
+
+        public ScatterChartPanel(String title, Map<String, double[]> data, String xLabel, String yLabel, Color pointColor) {
+            this.title = title; this.data = data; this.xLabel = xLabel; this.yLabel = yLabel; this.pointColor = pointColor;
+            setOpaque(false);
+            setPreferredSize(new Dimension(700, 380));
+            setMinimumSize(new Dimension(700, 380));
+            setMaximumSize(new Dimension(2000, 380));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Arial", Font.BOLD, 18));
+            g2d.drawString(title, 20, 30);
+
+            if (data == null || data.isEmpty()) return;
+
+            int padLeft = 75, padRight = 40, padTop = 60, padBottom = 60;
+            int graphW = getWidth() - padLeft - padRight;
+            int graphH = getHeight() - padTop - padBottom;
+
+            double minX = Double.MAX_VALUE, maxX = Double.MIN_VALUE;
+            double minY = Double.MAX_VALUE, maxY = Double.MIN_VALUE;
+
+            for (double[] vals : data.values()) {
+                if (vals[0] < minX) minX = vals[0]; if (vals[0] > maxX) maxX = vals[0];
+                if (vals[1] < minY) minY = vals[1]; if (vals[1] > maxY) maxY = vals[1];
+            }
+            minX *= 0.95; maxX *= 1.05; minY *= 0.95; maxY *= 1.05;
+
+            g2d.setColor(new Color(255, 255, 255, 20));
+            g2d.setStroke(new BasicStroke(1f));
+            for (int i = 1; i <= 4; i++) {
+                int yGrid = padTop + (graphH * i / 5);
+                int xGrid = padLeft + (graphW * i / 5);
+                g2d.drawLine(padLeft, yGrid, padLeft + graphW, yGrid);
+                g2d.drawLine(xGrid, padTop, xGrid, padTop + graphH);
+            }
+
+            g2d.setColor(Color.WHITE);
+            g2d.setStroke(new BasicStroke(2f));
+            g2d.drawLine(padLeft, padTop + graphH, padLeft + graphW, padTop + graphH);
+            g2d.drawLine(padLeft, padTop, padLeft, padTop + graphH);
+
+            g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+            g2d.drawString(xLabel, padLeft + graphW / 2 - 50, padTop + graphH + 35);
+
+            AffineTransform orig = g2d.getTransform();
+            g2d.rotate(-Math.PI / 2);
+            g2d.drawString(yLabel, -padTop - graphH / 2 - 50, padLeft - 45);
+            g2d.setTransform(orig);
+
+            g2d.setFont(new Font("Arial", Font.PLAIN, 10));
+            for (Map.Entry<String, double[]> entry : data.entrySet()) {
+                double[] vals = entry.getValue();
+                int x = padLeft + (int) (((vals[0] - minX) / (maxX - minX)) * graphW);
+                int y = padTop + graphH - (int) (((vals[1] - minY) / (maxY - minY)) * graphH);
+
+                g2d.setColor(new Color(pointColor.getRed(), pointColor.getGreen(), pointColor.getBlue(), 60));
+                g2d.fillOval(x - 7, y - 7, 14, 14);
+
+                g2d.setColor(pointColor);
+                g2d.fillOval(x - 3, y - 3, 6, 6);
+
+                g2d.setColor(new Color(200, 200, 200, 180));
+                String label = entry.getKey().length() > 6 ? entry.getKey().substring(0, 5) + "." : entry.getKey();
+                g2d.drawString(label, x + 8, y + 4);
+            }
+        }
+    }
+
+    // ==========================================
+    // COMPOSANT 3 : LE GINI-METER (Dynamique SANS LIMITE)
     // ==========================================
     private class GiniMeterSection extends JPanel {
         private String title;
@@ -151,8 +334,14 @@ public class StatsPage extends JPanel {
         public GiniMeterSection(String title, Map<String, Double> data) {
             this.title = title; this.data = data;
             setOpaque(false);
-            setPreferredSize(new Dimension(700, 380));
-            setMaximumSize(new Dimension(2000, 380));
+
+            // Calcul de la hauteur : 3 jauges par ligne
+            int rowsCount = (int) Math.ceil(data.size() / 3.0);
+            int calculatedHeight = 130 + (rowsCount * 75);
+
+            setPreferredSize(new Dimension(700, calculatedHeight));
+            setMinimumSize(new Dimension(700, calculatedHeight));
+            setMaximumSize(new Dimension(2000, calculatedHeight));
         }
 
         @Override
@@ -166,57 +355,49 @@ public class StatsPage extends JPanel {
 
             g2d.setFont(new Font("Arial", Font.ITALIC, 12));
             g2d.setColor(Color.GRAY);
-            g2d.drawString("0.0 = Égalité parfaite de fréquentation | 1.0 = Centralisation totale sur un musée", 20, 52);
+            g2d.drawString("0.0 = Égalité totale de fréquentation | 1.0 = Un seul établissement capte tout", 20, 52);
 
             int x = 40; int y = 105;
-            int count = 0;
             for (Map.Entry<String, Double> e : data.entrySet()) {
-                if (count++ > 7) break;
 
                 g2d.setColor(Color.WHITE);
                 g2d.setFont(new Font("Arial", Font.BOLD, 13));
                 g2d.drawString(e.getKey(), x, y - 10);
 
                 g2d.setColor(new Color(50, 50, 50));
-                g2d.fillRoundRect(x, y, 140, 12, 5, 5);
+                g2d.fillRoundRect(x, y, 140, 12, 5, 5); // Fond gris de la jauge
 
-                float hue = (float) (0.3 - (e.getValue() * 0.3));
+                float hue = (float) (0.3 - (e.getValue() * 0.3)); // Du vert (faible gini) au rouge (fort gini)
                 g2d.setColor(Color.getHSBColor(hue, 0.8f, 0.9f));
 
                 int valW = (int) (e.getValue() * 140);
-                g2d.fillRoundRect(x, y, valW, 12, 5, 5);
+                g2d.fillRoundRect(x, y, valW, 12, 5, 5); // Remplissage dynamique
 
                 g2d.setColor(Color.WHITE);
                 g2d.drawString(String.format("%.3f", e.getValue()), x + 148, y + 11);
 
-                x += 240;
-                if (x > getWidth() - 220) { x = 40; y += 75; }
+                x += 220; // Espacement de 220px pour placer 3 éléments par ligne proprement
+                if (x > getWidth() - 150) {
+                    x = 40;
+                    y += 75;
+                }
             }
         }
     }
 
     // ==========================================
-    // COMPOSANT 3 : DONUT CHART COMPLET ET PARFAIT A 100%
+    // COMPOSANT 4 : ANNEAU PROPRE
     // ==========================================
     private class DonutChartPanel extends JPanel {
         private String title;
-        private Map<String, Double> data;
+        private Color[] donutColors = { new Color(46, 204, 113), new Color(231, 76, 60) };
 
-        // Palette étendue de 18 couleurs distinctes pour couvrir toutes les régions sans répétition directe
-        private Color[] colors = {
-                new Color(28, 86, 120),   new Color(106, 28, 120),  new Color(162, 108, 39),
-                new Color(46, 204, 113),  new Color(231, 76, 60),   new Color(241, 196, 15),
-                new Color(26, 188, 156),  new Color(155, 89, 182),  new Color(52, 152, 219),
-                new Color(230, 126, 34),  new Color(52, 73, 94),    new Color(149, 165, 166),
-                new Color(27, 79, 114),   new Color(110, 44, 0),    new Color(19, 141, 117),
-                new Color(125, 102, 8),   new Color(90, 13, 132),   new Color(120, 120, 120)
-        };
-
-        public DonutChartPanel(String title, Map<String, Double> data) {
-            this.title = title; this.data = data;
+        public DonutChartPanel(String title) {
+            this.title = title;
             setOpaque(false);
-            setPreferredSize(new Dimension(700, 430));
-            setMaximumSize(new Dimension(2000, 430));
+            setPreferredSize(new Dimension(700, 260));
+            setMinimumSize(new Dimension(700, 260));
+            setMaximumSize(new Dimension(2000, 260));
         }
 
         @Override
@@ -229,81 +410,46 @@ public class StatsPage extends JPanel {
             g2d.setFont(new Font("Arial", Font.BOLD, 18));
             g2d.drawString(title, 20, 30);
 
-            int size = 220;
-            int cx = 40; int cy = 80;
-
-            double total = data.values().stream().mapToDouble(Double::doubleValue).sum();
-            if (total == 0) return;
-
-            // --- ALGORITHME DE CORRECTION POUR UN TOTAL DE STRICTEMENT 100% ---
-            Map<String, Double> percentages = new LinkedHashMap<>();
-            double totalRounded = 0;
-            String mainKey = null;
-            double maxPct = -1;
-
-            for (Map.Entry<String, Double> entry : data.entrySet()) {
-                double pct = (entry.getValue() / total) * 100.0;
-                double roundedPct = Math.round(pct * 10) / 10.0; // Arrondi à 1 décimale
-                percentages.put(entry.getKey(), roundedPct);
-                totalRounded += roundedPct;
-
-                if (roundedPct > maxPct) {
-                    maxPct = roundedPct;
-                    mainKey = entry.getKey();
-                }
+            long totalGratuit = 0, totalPayant = 0;
+            for (musee.RegionStats r : statsDAO.getRegionStats()) {
+                totalGratuit += r.getEntreesGratuites();
+                totalPayant += r.getEntreesPayantes();
             }
+            long totalGlobal = totalGratuit + totalPayant;
+            if (totalGlobal == 0) return;
 
-            // Correction de l'écart d'arrondi sur la plus grosse valeur
-            double diff = 100.0 - totalRounded;
-            if (Math.abs(diff) > 0.01 && mainKey != null) {
-                percentages.put(mainKey, Math.round((percentages.get(mainKey) + diff) * 10) / 10.0);
-            }
+            double pctGratuit = (double) totalGratuit / totalGlobal * 100.0;
+            double pctPayant = 100.0 - pctGratuit;
 
-            // Dessin des sections du Donut
-            double curAngle = 0;
-            int colorIdx = 0;
-            for (Map.Entry<String, Double> e : data.entrySet()) {
-                double angle = (e.getValue() / total) * 360.0;
-                g2d.setColor(colors[colorIdx % colors.length]);
-                g2d.fill(new Arc2D.Double(cx, cy, size, size, curAngle, angle, Arc2D.PIE));
-                curAngle += angle;
-                colorIdx++;
-            }
+            int size = 160;
+            int cx = 60; int cy = 70;
 
-            // --- LÉGENDE DE TOUTES LES RÉGIONS SUR 2 COLONNES ---
-            g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-            int lxStart = cx + size + 40;
-            int lyStart = cy + 10;
-            int itemIdx = 0;
+            double angleGratuit = (pctGratuit / 100.0) * 360.0;
+            g2d.setColor(donutColors[0]);
+            g2d.fill(new Arc2D.Double(cx, cy, size, size, 0, angleGratuit, Arc2D.PIE));
 
-            for (Map.Entry<String, Double> e : percentages.entrySet()) {
-                int col = itemIdx / 9; // Max 9 lignes par colonne
-                int row = itemIdx % 9;
+            g2d.setColor(donutColors[1]);
+            g2d.fill(new Arc2D.Double(cx, cy, size, size, angleGratuit, 360.0 - angleGratuit, Arc2D.PIE));
 
-                int lx = lxStart + (col * 210);
-                int ly = lyStart + (row * 24);
+            g2d.setFont(new Font("Arial", Font.PLAIN, 13));
+            int lx = cx + size + 50;
 
-                // Dessin du point rond à la place de la box
-                g2d.setColor(colors[itemIdx % colors.length]);
-                g2d.fillOval(lx, ly + 2, 11, 11);
+            g2d.setColor(donutColors[0]);
+            g2d.fillOval(lx, cy + 30, 12, 12);
+            g2d.setColor(Color.WHITE);
+            g2d.drawString("Entrées Gratuites (" + String.format(Locale.US, "%.1f", pctGratuit) + "%)", lx + 25, cy + 42);
 
-                // Label textuel
-                g2d.setColor(Color.WHITE);
-                String label = e.getKey();
-                if (label.length() > 18) label = label.substring(0, 16) + "..";
-                g2d.drawString(label + " (" + String.format(Locale.US, "%.1f", e.getValue()) + "%)", lx + 20, ly + 12);
+            g2d.setColor(donutColors[1]);
+            g2d.fillOval(lx, cy + 70, 12, 12);
+            g2d.setColor(Color.WHITE);
+            g2d.drawString("Entrées Payantes (" + String.format(Locale.US, "%.1f", pctPayant) + "%)", lx + 25, cy + 82);
 
-                itemIdx++;
-            }
-
-            // Centre du Donut évidé pour le look moderne
             g2d.setColor(BACKGROUND_SECONDARY_COLOR);
             g2d.fillOval(cx + size/4, cy + size/4, size/2, size/2);
             g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Arial", Font.BOLD, 13));
+            g2d.setFont(new Font("Arial", Font.BOLD, 14));
             FontMetrics fm = g2d.getFontMetrics();
-            g2d.drawString("TOTAL", cx + (size - fm.stringWidth("TOTAL")) / 2, cy + (size / 2) - 3);
-            g2d.drawString("100%", cx + (size - fm.stringWidth("100%")) / 2, cy + (size / 2) + 15);
+            g2d.drawString("PUBLICS", cx + (size - fm.stringWidth("PUBLICS")) / 2, cy + size/2 + 5);
         }
     }
 
@@ -345,56 +491,42 @@ public class StatsPage extends JPanel {
         g2d.drawLine(0, getHeight() - BORDER_SIZE, getWidth(), getHeight() - BORDER_SIZE);
 
         int backBtnY = (BORDER_SIZE - SIZE_BACK_BUTTON) / 2;
-        g2d.setColor(BACK_BUTTON_HOVER ? RETURN_HOVER_COLOR : RETURN_COLOR);
+        g2d.setColor(new Color(86, 86, 86));
         g2d.fillRoundRect(MARGIN_BACK, backBtnY, SIZE_BACK_BUTTON, SIZE_BACK_BUTTON, 15, 15);
+        g2d.setColor(BACK_BUTTON_HOVER ? RETURN_HOVER_COLOR : RETURN_COLOR);
+        g2d.fillRoundRect(MARGIN_BACK + 3, backBtnY + 3, SIZE_BACK_BUTTON - 6, SIZE_BACK_BUTTON - 6, 10, 10);
 
         g2d.setColor(TEXT_COLOR);
         g2d.setFont(new Font("Arial", Font.BOLD, 24));
         FontMetrics fm = g2d.getFontMetrics();
         g2d.drawString("<", MARGIN_BACK + (SIZE_BACK_BUTTON - fm.stringWidth("<")) / 2, backBtnY + ((SIZE_BACK_BUTTON - fm.getHeight()) / 2) + fm.getAscent());
 
-        g2d.drawString("DONNÉES GLOBALES DE L'APPLICATION", MARGIN_BACK + SIZE_BACK_BUTTON + 20, backBtnY + ((SIZE_BACK_BUTTON - fm.getHeight()) / 2) + fm.getAscent());
+        g2d.drawString("DONNÉES GLOBALES DU PATRIMOINE", MARGIN_BACK + SIZE_BACK_BUTTON + 20, backBtnY + ((SIZE_BACK_BUTTON - fm.getHeight()) / 2) + fm.getAscent());
     }
-    // --- MÉTHODE POUR RENDRE LA SCROLLBAR MODERNE ---
+
     private void applyModernScrollBar(JScrollPane scrollPane) {
         JScrollBar verticalBar = scrollPane.getVerticalScrollBar();
         verticalBar.setOpaque(false);
-        verticalBar.setPreferredSize(new Dimension(10, 0)); // Largeur fine (10px)
+        verticalBar.setPreferredSize(new Dimension(10, 0));
 
         verticalBar.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
             @Override
             protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
-                // Rendre le fond (le rail) totalement transparent
                 g.setColor(new Color(0, 0, 0, 0));
                 g.fillRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height);
             }
-
             @Override
             protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
-                // Dessiner le curseur (arrondi et semi-transparent)
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(255, 255, 255, 100)); // Blanc avec 40% d'opacité
+                g2.setColor(new Color(255, 255, 255, 100));
                 g2.fillRoundRect(thumbBounds.x + 2, thumbBounds.y + 2, thumbBounds.width - 4, thumbBounds.height - 4, 10, 10);
                 g2.dispose();
             }
-
-            @Override
-            protected JButton createDecreaseButton(int orientation) {
-                return createZeroButton(); // Supprime la flèche du haut
-            }
-
-            @Override
-            protected JButton createIncreaseButton(int orientation) {
-                return createZeroButton(); // Supprime la flèche du bas
-            }
-
+            @Override protected JButton createDecreaseButton(int orientation) { return createZeroButton(); }
+            @Override protected JButton createIncreaseButton(int orientation) { return createZeroButton(); }
             private JButton createZeroButton() {
-                JButton button = new JButton();
-                button.setPreferredSize(new Dimension(0, 0));
-                button.setMinimumSize(new Dimension(0, 0));
-                button.setMaximumSize(new Dimension(0, 0));
-                return button;
+                JButton button = new JButton(); button.setPreferredSize(new Dimension(0, 0)); return button;
             }
         });
     }

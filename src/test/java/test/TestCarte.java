@@ -1,9 +1,11 @@
 package test;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import carte.Carte;
 import carte.Rarete;
@@ -107,8 +109,8 @@ public class TestCarte {
         assertEquals(3, themes.length);
         // trim attendu sur chaque thème
         assertEquals("Arts décoratifs", themes[0].trim());
-        assertEquals("Ethnologie",      themes[1].trim());
-        assertEquals("Histoire",        themes[2].trim());
+        assertEquals("Ethnologie", themes[1].trim());
+        assertEquals("Histoire", themes[2].trim());
     }
 
     @Test
@@ -119,7 +121,7 @@ public class TestCarte {
         String[] themes = c.getThemes();
         assertEquals(2, themes.length);
         assertEquals("Arts décoratifs", themes[0].trim().replace("\"", ""));
-        assertEquals("Ethnologie",      themes[1].trim().replace("\"", ""));
+        assertEquals("Ethnologie", themes[1].trim().replace("\"", ""));
     }
 
     @Test
@@ -132,10 +134,60 @@ public class TestCarte {
     }
 
     @Test
-    @DisplayName("toString() retourne le format attendu")
+    @DisplayName("toString() retourne la chaîne correcte avec tous les champs")
     public void testToString() {
-        Carte c = new Carte(7, "Musée de Cluny", "Paris", "Moyen Âge", "Histoire", "Atout", "Intérêt", Rarete.RARE);
-        assertEquals("Carte: Musée de Cluny (Paris) - Type: Moyen Âge", c.toString());
+        // Créer une carte avec tous les champs remplis
+        Carte c = new Carte(1, "Musée du Louvre", "Paris", "Arts", "Histoire du musée", "Atout 1", "Intérêt 1", Rarete.COMMUN);
+        c.setIdmusofile("M0001");
+        c.setAdresse("1 Rue de la Légion d'Honneur");
+        c.setLieu("7e arrondissement");
+        c.setCodePostal("75001");
+        c.setVille("Paris");
+        c.setRegion("Île-de-France");
+        c.setDepartement("Paris");
+        c.setCoordonnees("48.8600,2.3266");
+        c.setDomaineThematique("Arts");
+        c.setHistoire("Histoire du musée");
+        c.setAtout("Atout 1");
+        c.setInteret("Intérêt 1");
+        c.setAnneeCreation(1986);
+        c.setPayant(1000000);
+        c.setGratuit(500000);
+        c.setTotal(1500000);
+        c.setIndividuel(1200000);
+        c.setScolaires(200000);
+        c.setGroupesHorsScolaires(50000);
+        c.setMoins18AnsHorsScolaires(100000);
+        c.setDe18A25Ans(150000);
+        c.setRarete(Rarete.EPIQUE);
+
+        String expected = "Carte{"
+                + "identifiant=1, "
+                + "nomOfficiel='Musée du Louvre', "
+                + "idmusofile='M0001', "
+                + "adresse='1 Rue de la Légion d'Honneur', "
+                + "lieu='7e arrondissement', "
+                + "codePostal='75001', "
+                + "ville='Paris', "
+                + "region='Île-de-France', "
+                + "departement='Paris', "
+                + "coordonnees='48.8600,2.3266', "
+                + "domaineThematique='Arts', "
+                + "histoire='Histoire du musée', "
+                + "atout='Atout 1', "
+                + "interet='Intérêt 1', "
+                + "anneeCreation=1986, "
+                + "payant=1000000, "
+                + "gratuit=500000, "
+                + "total=1500000, "
+                + "individuel=1200000, "
+                + "scolaires=200000, "
+                + "groupesHorsScolaires=50000, "
+                + "moins18AnsHorsScolaires=100000, "
+                + "de18A25Ans=150000, "
+                + "rarete=EPIQUE}";
+
+        assertEquals(expected, c.toString());
     }
 
     @Test

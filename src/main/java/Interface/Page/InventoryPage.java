@@ -71,7 +71,7 @@ public class InventoryPage extends JPanel {
         detailsScrollPane.getViewport().setOpaque(false);
         detailsScrollPane.setBorder(null);
         detailsScrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        applyModernScrollBar(detailsScrollPane); // <-- LIGNE AJOUTÉE ICI
+        applyModernScrollBar(detailsScrollPane); // Applique le style aux deux barres
 
         // --- Conteneur des catégories (à gauche) ---
         categoriesContainer = new JPanel();
@@ -83,7 +83,7 @@ public class InventoryPage extends JPanel {
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        applyModernScrollBar(scrollPane); // <-- LIGNE AJOUTÉE ICI
+        applyModernScrollBar(scrollPane); // Applique le style aux deux barres
 
         add(scrollPane);
         add(detailsScrollPane);
@@ -445,38 +445,36 @@ public class InventoryPage extends JPanel {
         g2d.setColor(Color.BLACK);
         g2d.fillRoundRect(rectX, BORDER_SIZE + 10, rectW, h - (BORDER_SIZE * 2) - 20, 25, 25);
     }
-    // --- MÉTHODE POUR RENDRE LA SCROLLBAR MODERNE ---
-    private void applyModernScrollBar(JScrollPane scrollPane) {
-        JScrollBar verticalBar = scrollPane.getVerticalScrollBar();
-        verticalBar.setOpaque(false);
-        verticalBar.setPreferredSize(new Dimension(10, 0)); // Largeur fine (10px)
 
-        verticalBar.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+    // --- MÉTHODE POUR RENDRE LES SCROLLBARS (VERTICALE ET HORIZONTALE) MODERNES ---
+    private void applyModernScrollBar(JScrollPane scrollPane) {
+        // Définition d'une classe interne locale réutilisable pour l'UI personnalisée
+        class ModernScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
             @Override
             protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
-                // Rendre le fond (le rail) totalement transparent
+                // Fond (rail) totalement transparent
                 g.setColor(new Color(0, 0, 0, 0));
                 g.fillRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height);
             }
 
             @Override
             protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
-                // Dessiner le curseur (arrondi et semi-transparent)
+                // Curseur arrondi et semi-transparent (blanc 40%)
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(255, 255, 255, 100)); // Blanc avec 40% d'opacité
+                g2.setColor(new Color(255, 255, 255, 100));
                 g2.fillRoundRect(thumbBounds.x + 2, thumbBounds.y + 2, thumbBounds.width - 4, thumbBounds.height - 4, 10, 10);
                 g2.dispose();
             }
 
             @Override
             protected JButton createDecreaseButton(int orientation) {
-                return createZeroButton(); // Supprime la flèche du haut
+                return createZeroButton(); // Supprime la flèche directionnelle de début
             }
 
             @Override
             protected JButton createIncreaseButton(int orientation) {
-                return createZeroButton(); // Supprime la flèche du bas
+                return createZeroButton(); // Supprime la flèche directionnelle de fin
             }
 
             private JButton createZeroButton() {
@@ -486,6 +484,18 @@ public class InventoryPage extends JPanel {
                 button.setMaximumSize(new Dimension(0, 0));
                 return button;
             }
-        });
+        }
+
+        // 1. Application à la barre verticale (Fine en largeur : 10px)
+        JScrollBar verticalBar = scrollPane.getVerticalScrollBar();
+        verticalBar.setOpaque(false);
+        verticalBar.setPreferredSize(new Dimension(10, 0));
+        verticalBar.setUI(new ModernScrollBarUI());
+
+        // 2. Application à la barre horizontale (Fine en hauteur : 10px)
+        JScrollBar horizontalBar = scrollPane.getHorizontalScrollBar();
+        horizontalBar.setOpaque(false);
+        horizontalBar.setPreferredSize(new Dimension(0, 10));
+        horizontalBar.setUI(new ModernScrollBarUI());
     }
 }

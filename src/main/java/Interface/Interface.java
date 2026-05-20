@@ -18,7 +18,6 @@ public class Interface {
     private JPanel mainContentPanel;
     private User user;
 
-    // 1. On déclare la variable inventoryPage ici pour y avoir accès partout
     private InventoryPage inventoryPage;
 
     public Interface() {
@@ -71,11 +70,10 @@ public class Interface {
         cardLayout.show(mainContentPanel, page);
     }
 
-    // 3. VOICI LA MÉTHODE MANQUANTE QUE MAP PAGE ESSAIE D'APPELER !
     public void showInventoryForRegion(String region) {
         if (inventoryPage != null) {
-            inventoryPage.loadRegion(region); // Charge les cartes de la région
-            show("INVENTORY"); // Affiche la page inventaire
+            inventoryPage.loadRegion(region);
+            show("INVENTORY");
         }
     }
 }

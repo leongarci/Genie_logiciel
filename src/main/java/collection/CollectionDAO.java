@@ -43,7 +43,6 @@ public class CollectionDAO {
     // Récupère la collection de cartes d'un utilisateur
     public List<CartePossedee> getCollectionUtilisateur(int userId) {
         List<CartePossedee> maCollection = new ArrayList<>();
-        // CORRECTION : Ajout de m.region, m.departement et m.atout dans le SELECT
         String sql = "SELECT m.identifiant, m.nom_officiel, m.ville, m.region, m.departement, m.domaine_thematique, "
                 + "m.histoire, m.adresse, m.atout, m.interet, m.total, c.quantite "
                 + "FROM public.collection c "
@@ -66,7 +65,6 @@ public class CollectionDAO {
                     rareteCalculee = Rarete.LEGENDAIRE;
                 }
 
-                // CORRECTION : Création propre de la carte avec les bonnes colonnes
                 Carte carte = new Carte(
                         rs.getInt("identifiant"),
                         rs.getString("nom_officiel"),

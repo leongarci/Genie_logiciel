@@ -34,7 +34,6 @@ public class AuthService {
                         int nouvelId = rs.getInt(1);
                         System.out.println("Inscription réussie " + login);
 
-                        // CORRECTION : On initialise les boosters pour aujourd'hui
                         new BoosterDAO().initialiserBoosterQuotidien(nouvelId);
 
                         return new User(nouvelId, login);
@@ -67,7 +66,6 @@ public class AuthService {
                 if (BCrypt.checkpw(motDePasseSaisi, mdpHacheEnBase)) {
                     System.out.println("Connexion réussie");
 
-                    // CORRECTION : On s'assure que le compteur d'aujourd'hui existe
                     new BoosterDAO().initialiserBoosterQuotidien(userId);
 
                     return new User(userId, pseudo);

@@ -25,7 +25,6 @@ public class DatabaseConfig {
     private static final HikariDataSource ds;
     static {
         HikariConfig cfg = new HikariConfig();
-        //System.out.println(URL + " / " + USER + " / " + PASSWORD);
         cfg.setJdbcUrl(URL);
         cfg.setUsername(USER);
         cfg.setPassword(PASSWORD);

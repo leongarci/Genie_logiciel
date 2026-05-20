@@ -34,7 +34,7 @@ public class BoosterDAO {
         } catch (SQLException e) {
             System.err.println("Erreur vérification limite booster : " + e.getMessage());
         }
-        return false; // Par sécurité, on bloque en cas d'erreur BDD
+        return false;
     }
 
     // Incrémente le compteur d'ouverture pour la journée

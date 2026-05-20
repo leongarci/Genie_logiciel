@@ -66,9 +66,6 @@ public class FlexibleModernWindow extends JFrame {
 
     private static final int RESIZE_MARGIN = 10;
 
-    // ==========================================
-    // 1. ARCHITECTURE : THÈMES MODULAIRES
-    // ==========================================
     public static abstract class WindowTheme {
 
         public String fontFamily = "Segoe UI";
@@ -132,9 +129,6 @@ public class FlexibleModernWindow extends JFrame {
         }
     }
 
-    // ==========================================
-    // INITIALISATION FENÊTRE
-    // ==========================================
     public FlexibleModernWindow(String title, JPanel contentPanel, WindowTheme theme, int width, int height, Point location, boolean startMaximized) {
         this.theme = (theme != null) ? theme : new DarkTheme();
         initWindow(title, contentPanel);
@@ -210,15 +204,11 @@ public class FlexibleModernWindow extends JFrame {
         this.addMouseMotionListener(resizeListener);
     }
 
-    // ==========================================
-    // 4. ACCESSIBILITÉ & RACCOURCIS
-    // ==========================================
     private void setupAccessibilityAndShortcuts() {
         JRootPane root = getRootPane();
         InputMap inputMap = root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = root.getActionMap();
 
-        // Ctrl + W / Alt + F4 pour fermer
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, InputEvent.CTRL_DOWN_MASK), "close");
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.ALT_DOWN_MASK), "close");
         actionMap.put("close", new AbstractAction() {
@@ -228,7 +218,6 @@ public class FlexibleModernWindow extends JFrame {
             }
         });
 
-        // Ctrl + F pour Focus la recherche
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), "focusSearch");
         actionMap.put("focusSearch", new AbstractAction() {
             @Override
@@ -237,13 +226,9 @@ public class FlexibleModernWindow extends JFrame {
             }
         });
 
-        // La navigation Tab est gérée nativement par Swing si les composants sont focusables.
-        // Nous nous assurons que le JTextField de recherche le soit lors de sa création.
     }
 
-    // ==========================================
-    // MÉTHODES PUBLIQUES (API)
-    // ==========================================
+
     public WindowTheme getTheme() {
         return theme;
     }
@@ -308,9 +293,6 @@ public class FlexibleModernWindow extends JFrame {
         titleBar.setMenuBar(menuBar);
     }
 
-    // ==========================================
-    // 1. ARCHITECTURE : BARRE DE TITRE SÉPARÉE
-    // ==========================================
     private class ModernTitleBar extends JPanel {
 
         private final FlexibleModernWindow window;
@@ -519,9 +501,6 @@ public class FlexibleModernWindow extends JFrame {
         }
     }
 
-    // ==========================================
-    // 1 & 2. GESTIONNAIRE D'ANCRAGE & MULTI-ÉCRANS
-    // ==========================================
     private class SnapHandler {
 
         private final FlexibleModernWindow window;
@@ -586,7 +565,6 @@ public class FlexibleModernWindow extends JFrame {
         }
 
         public Rectangle getPredictedSnapBounds(Point screenLocation) {
-            // MULTI-ÉCRANS : On cherche l'écran sur lequel se trouve la souris
             GraphicsConfiguration gc = getGraphicsConfigurationForPoint(screenLocation);
             Rectangle bounds = gc.getBounds();
             Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
@@ -629,20 +607,17 @@ public class FlexibleModernWindow extends JFrame {
                     return gc;
                 }
             }
-            return window.getGraphicsConfiguration(); // Fallback
+            return window.getGraphicsConfiguration();
         }
     }
 
-    // ==========================================
-    // 3. PERFORMANCE DU REDIMENSIONNEMENT
-    // ==========================================
     private class ResizeListener extends MouseAdapter {
 
         private int cursorType = Cursor.DEFAULT_CURSOR;
         private Point startPos = null;
         private Rectangle startBounds = null;
         private long lastUpdate = 0;
-        private final int THROTTLE_MS = 15; // Évite l'engorgement du thread UI (~60 FPS)
+        private final int THROTTLE_MS = 15;
 
         @Override
         public void mouseMoved(MouseEvent e) {
@@ -694,7 +669,6 @@ public class FlexibleModernWindow extends JFrame {
                 return;
             }
 
-            // THROTTLE : On ne redessine pas à chaque milliseconde pour éviter les lags avec des JTextArea
             long now = System.currentTimeMillis();
             if (now - lastUpdate < THROTTLE_MS) {
                 return;
@@ -728,7 +702,7 @@ public class FlexibleModernWindow extends JFrame {
             if (w >= minSize.width && h >= minSize.height) {
                 setBounds(x, y, w, h);
                 normalBounds = getBounds();
-                validate(); // Assure une mise à jour propre du layout interne sans repaints excessifs
+                validate();
             }
         }
 
@@ -739,9 +713,6 @@ public class FlexibleModernWindow extends JFrame {
         }
     }
 
-    // ==========================================
-    // MÉTHODES DE DESIGN STATIQUES CONSERVÉES
-    // ==========================================
     public static void setupMenuDesign(WindowTheme theme) {
         UIManager.put("MenuBar.background", new Color(0, 0, 0, 0));
         UIManager.put("MenuBar.border", BorderFactory.createEmptyBorder());

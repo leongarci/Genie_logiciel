@@ -72,7 +72,7 @@ public class HomePage extends JPanel implements MouseListener, MouseMotionListen
         int xButton3 = xButton2 + WIDTH_BUTTON + gap;
 
         // Bouton 1 : INVENTORY
-        drawButton(g2d, xButton1, yButton, "INVENTORY", inventiryHover ? INVENTORY_HOVER_COLOR : INVENTORY_COLOR);
+        drawButton(g2d, xButton1, yButton, "INVENTAIRE", inventiryHover ? INVENTORY_HOVER_COLOR : INVENTORY_COLOR);
 
         // Bouton 2 : STATS
         drawButton(g2d, xButton2, yButton, "DONNÉES", statsHover ? STATS_HOVER_COLOR : STATS_COLOR);

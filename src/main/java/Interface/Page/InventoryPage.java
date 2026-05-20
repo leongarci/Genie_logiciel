@@ -93,16 +93,14 @@ public class InventoryPage extends JPanel {
                 int w = getWidth();
                 int h = getHeight();
 
-                // On utilise des pourcentages stricts pour que ça s'adapte parfaitement
                 int marginX = Math.max(20, (int)(w * 0.04));
                 int listWidth = (int)(w * 0.50); // 50% de la largeur pour la liste
 
                 int rectX = (int)(w * 0.58); // Le bloc noir commence à 58%
-                int rectW = w - rectX - marginX; // Prend le reste de la place moins la marge
+                int rectW = w - rectX - marginX;
                 int rectY = BORDER_SIZE + 10;
                 int rectH = h - (BORDER_SIZE * 2) - 20;
 
-                // Application des dimensions
                 scrollPane.setBounds(marginX, BORDER_SIZE + 20, listWidth, h - (BORDER_SIZE * 2) - 40);
                 detailsScrollPane.setBounds(rectX + 15, rectY + 15, rectW - 30, rectH - 30);
             }
@@ -127,13 +125,11 @@ public class InventoryPage extends JPanel {
 
         for (CartePossedee cp : allCards) {
             Carte c = cp.getCarte();
-            // On vérifie la région ET le département (utile pour les DROM)
             if (isSameRegion(currentRegion, c.getRegion()) || isSameRegion(currentRegion, c.getDepartement())) {
 
                 String[] themes = c.getThemes();
                 String category = "AUTRES";
 
-                // On ne prend QUE le premier thème pour éviter les doublons
                 if (themes != null && themes.length > 0) {
                     category = normalizeCategory(themes[0]);
                 }
@@ -145,7 +141,7 @@ public class InventoryPage extends JPanel {
             }
         }
 
-        // --- TRI DES CARTES PAR RARETÉ (Commune -> Rare -> Epique -> Legendaire) ---
+        // --- TRI DES CARTES PAR RARETÉ ---
         for (List<CartePossedee> list : groupedCards.values()) {
             list.sort((cp1, cp2) -> Integer.compare(
                     getRareteWeight(cp1.getCarte().getRarete()),
@@ -186,7 +182,6 @@ public class InventoryPage extends JPanel {
         if (t.contains("moderne") || t.contains("contemporain")) return "ARTS MODERNE";
         if (t.contains("ethnologie")) return "ETHNOLOGIE";
         if (t.contains("histoire")) return "HISTOIRE";
-        if (t.contains("nature") || t.contains("science")) return "SCIENCES";
 
         return "AUTRES";
     }
@@ -230,12 +225,22 @@ public class InventoryPage extends JPanel {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         header.setOpaque(false);
 
+        // CHARGEMENT IMAGE CATÉGORIE
         JLabel icon = new JLabel();
+        String catFileName = "cat_" + categoryName.toLowerCase().replace(" ", "_") + ".png";
+
         try {
-            java.net.URL imgURL = getClass().getResource("/Interface/Page/Images/cat_" + categoryName.toLowerCase().replaceAll("[ éè]", "_") + ".png");
-            if(imgURL != null) {
-                ImageIcon ic = new ImageIcon(new ImageIcon(imgURL).getImage().getScaledInstance(45, 45, Image.SCALE_SMOOTH));
-                icon.setIcon(ic);
+            java.net.URL imgURL = getClass().getResource("/Interface/Page/ImagesCatégories/" + catFileName);
+            Image image = null;
+
+            if (imgURL != null) {
+                image = new ImageIcon(imgURL).getImage();
+            } else {
+                image = new ImageIcon("src/main/java/Interface/Page/ImagesCatégories/" + catFileName).getImage();
+            }
+
+            if (image != null && image.getWidth(null) != -1) {
+                icon.setIcon(new ImageIcon(image.getScaledInstance(45, 45, Image.SCALE_SMOOTH)));
             } else {
                 icon.setText("🔘");
                 icon.setFont(new Font("Arial", Font.PLAIN, 30));
@@ -301,13 +306,32 @@ public class InventoryPage extends JPanel {
         item.setOpaque(false);
         item.add(Box.createRigidArea(new Dimension(50, 0)));
 
+        // CHARGEMENT IMAGE RARETÉ
         JLabel rarityIcon = new JLabel();
+
+        // Traduction de la Rareté Java vers tes noms de fichiers
+        String rarityFileName = "Bronze_cropped.png"; // Valeur par défaut (COMMUN)
+        if (carte.getRarete() != null) {
+            switch (carte.getRarete()) {
+                case COMMUN: rarityFileName = "Bronze_cropped.png"; break;
+                case RARE: rarityFileName = "Argent_cropped.png"; break;
+                case EPIQUE: rarityFileName = "Or_cropped.png"; break;
+                case LEGENDAIRE: rarityFileName = "Ultime_cropped.png"; break;
+            }
+        }
+
         try {
-            String rareteStr = carte.getRarete() != null ? carte.getRarete().toString().toLowerCase() : "commun";
-            java.net.URL rImgURL = getClass().getResource("/Interface/Page/Images/rarity_" + rareteStr + ".png");
+            java.net.URL rImgURL = getClass().getResource("/Interface/Page/ImagesRaretés/" + rarityFileName);
+            Image image = null;
+
             if (rImgURL != null) {
-                ImageIcon rIcon = new ImageIcon(new ImageIcon(rImgURL).getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH));
-                rarityIcon.setIcon(rIcon);
+                image = new ImageIcon(rImgURL).getImage();
+            } else {
+                image = new ImageIcon("src/main/java/Interface/Page/ImagesRaretés/" + rarityFileName).getImage();
+            }
+
+            if (image != null && image.getWidth(null) != -1) {
+                rarityIcon.setIcon(new ImageIcon(image.getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
             } else {
                 rarityIcon.setText("●");
                 rarityIcon.setForeground(Color.WHITE);
@@ -327,7 +351,6 @@ public class InventoryPage extends JPanel {
         museumBtn.setBorderPainted(false);
         museumBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Remplacement des emojis par des points standard "•"
         museumBtn.addActionListener(e -> {
             String qte = " (Possédé : " + cp.getQuantite() + ")";
             String details = "• MUSÉE : " + (carte.getNomOfficiel() != null ? carte.getNomOfficiel() : "N/A") + qte + "\n\n" +

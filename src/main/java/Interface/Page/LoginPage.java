@@ -8,6 +8,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.FocusEvent;
@@ -18,6 +19,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
@@ -34,7 +36,7 @@ public class LoginPage extends JPanel {
 
     // Composants
     private JTextField userField;
-    private JTextField passField;
+    private JPasswordField passField; // Modifié pour masquer le mot de passe
     private JButton mainButton;
     private JButton switchButton;
 
@@ -45,33 +47,42 @@ public class LoginPage extends JPanel {
     private final Color TEXT_MODAL_COLOR = new Color(255, 255, 255);
 
     private final int WIDTH_MODAL = 400;
-    private final int HEIGHT_MODAL = 400; // Augmenté pour laisser de la place
+    private final int HEIGHT_MODAL = 400;
     private final int PADDING_MODAL = 3;
 
     public LoginPage(Interface anInterface) {
-        super(null); // Layout null pour positionnement manuel dynamique
+        super(null);
         this.anInterface = anInterface;
         setOpaque(false);
+
         // Initialisation des composants
         userField = textBox("username");
-        passField = textBox("password");
+        passField = passwordBox("password"); // Utilise la nouvelle méthode
         mainButton = button("Se connecter");
         switchButton = button("S’inscrire");
 
         // Action du bouton principal (Login/Register)
         mainButton.addActionListener(e -> {
             AuthService authService = new AuthService();
-            User us = login ? authService.login(userField.getText(), passField.getText())
-                    : authService.inscrireUtilisateur(userField.getText(), passField.getText());
+            // On récupère le mot de passe de façon sécurisée
+            String password = new String(passField.getPassword());
+
+            User us = login ? authService.login(userField.getText(), password)
+                    : authService.inscrireUtilisateur(userField.getText(), password);
 
             if (us != null) {
                 anInterface.setUser(us);
                 anInterface.show("HOME");
             } else {
                 err = texte("Identifiants incorrects", err);
-                repositionnerComposants(); // Replacer l'erreur au bon endroit
+                repositionnerComposants();
             }
         });
+
+        // Permet de valider avec la touche "Entrée" sur le clavier
+        ActionListener enterAction = e -> mainButton.doClick();
+        userField.addActionListener(enterAction);
+        passField.addActionListener(enterAction);
 
         // Action pour switcher entre Connexion et Inscription
         switchButton.addActionListener(e -> {
@@ -83,7 +94,7 @@ public class LoginPage extends JPanel {
                 switchButton.setText("S’inscrire");
                 mainButton.setText("Se connecter");
             }
-            repaint(); // Pour mettre à jour le titre "Connexion" dessiné
+            repaint();
         });
 
         // Rendre l'interface responsive
@@ -95,17 +106,13 @@ public class LoginPage extends JPanel {
         });
     }
 
-    /**
-     * Calcule la position de chaque élément en fonction de la taille actuelle
-     * de la fenêtre
-     */
     private void repositionnerComposants() {
         int centerX = getWidth() / 2;
         int modalY = (getHeight() - HEIGHT_MODAL) / 2;
 
         int fieldWidth = 250;
         int fieldHeight = 35;
-        int startY = modalY + 110; // Commence après le titre "Connexion"
+        int startY = modalY + 110;
 
         userField.setBounds(centerX - (fieldWidth / 2), startY, fieldWidth, fieldHeight);
         passField.setBounds(centerX - (fieldWidth / 2), startY + 50, fieldWidth, fieldHeight);
@@ -148,11 +155,12 @@ public class LoginPage extends JPanel {
 
         // Lignes de décoration
         g2d.setStroke(new BasicStroke(2f));
-        g2d.setColor(new Color(255, 255, 255, 50)); // Blanc semi-transparent
+        g2d.setColor(new Color(255, 255, 255, 50));
         g2d.drawLine(x + 50, y + 70, x + WIDTH_MODAL - 50, y + 70);
     }
 
     // --- Méthodes utilitaires pour créer les composants ---
+
     public JTextField textBox(String placeHolder) {
         JTextField textField = new JTextField(placeHolder);
         textField.setOpaque(false);
@@ -179,6 +187,44 @@ public class LoginPage extends JPanel {
         });
         this.add(textField);
         return textField;
+    }
+
+    // Nouvelle méthode spécifique pour le mot de passe
+    public JPasswordField passwordBox(String placeHolder) {
+        JPasswordField passwordField = new JPasswordField(placeHolder);
+        passwordField.setOpaque(false);
+        passwordField.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, Color.WHITE));
+        passwordField.setForeground(Color.GRAY);
+        passwordField.setCaretColor(Color.WHITE);
+
+        // Affiche le texte en clair au début (pour voir le placeholder)
+        passwordField.setEchoChar((char) 0);
+
+        passwordField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                String pass = new String(passwordField.getPassword());
+                if (pass.equals(placeHolder)) {
+                    passwordField.setText("");
+                    passwordField.setForeground(Color.WHITE);
+                    // Dès qu'on clique, on remet les petits points de masquage
+                    passwordField.setEchoChar('•');
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                String pass = new String(passwordField.getPassword());
+                if (pass.isEmpty()) {
+                    passwordField.setForeground(Color.GRAY);
+                    passwordField.setText(placeHolder);
+                    // Si c'est vide, on retire les points pour réafficher "password" en clair
+                    passwordField.setEchoChar((char) 0);
+                }
+            }
+        });
+        this.add(passwordField);
+        return passwordField;
     }
 
     public JButton button(String text) {

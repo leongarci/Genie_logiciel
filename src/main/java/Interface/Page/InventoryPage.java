@@ -71,6 +71,7 @@ public class InventoryPage extends JPanel {
         detailsScrollPane.getViewport().setOpaque(false);
         detailsScrollPane.setBorder(null);
         detailsScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        applyModernScrollBar(detailsScrollPane); // <-- LIGNE AJOUTÉE ICI
 
         // --- Conteneur des catégories (à gauche) ---
         categoriesContainer = new JPanel();
@@ -82,6 +83,7 @@ public class InventoryPage extends JPanel {
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        applyModernScrollBar(scrollPane); // <-- LIGNE AJOUTÉE ICI
 
         add(scrollPane);
         add(detailsScrollPane);
@@ -442,5 +444,48 @@ public class InventoryPage extends JPanel {
 
         g2d.setColor(Color.BLACK);
         g2d.fillRoundRect(rectX, BORDER_SIZE + 10, rectW, h - (BORDER_SIZE * 2) - 20, 25, 25);
+    }
+    // --- MÉTHODE POUR RENDRE LA SCROLLBAR MODERNE ---
+    private void applyModernScrollBar(JScrollPane scrollPane) {
+        JScrollBar verticalBar = scrollPane.getVerticalScrollBar();
+        verticalBar.setOpaque(false);
+        verticalBar.setPreferredSize(new Dimension(10, 0)); // Largeur fine (10px)
+
+        verticalBar.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override
+            protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
+                // Rendre le fond (le rail) totalement transparent
+                g.setColor(new Color(0, 0, 0, 0));
+                g.fillRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height);
+            }
+
+            @Override
+            protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
+                // Dessiner le curseur (arrondi et semi-transparent)
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(255, 255, 255, 100)); // Blanc avec 40% d'opacité
+                g2.fillRoundRect(thumbBounds.x + 2, thumbBounds.y + 2, thumbBounds.width - 4, thumbBounds.height - 4, 10, 10);
+                g2.dispose();
+            }
+
+            @Override
+            protected JButton createDecreaseButton(int orientation) {
+                return createZeroButton(); // Supprime la flèche du haut
+            }
+
+            @Override
+            protected JButton createIncreaseButton(int orientation) {
+                return createZeroButton(); // Supprime la flèche du bas
+            }
+
+            private JButton createZeroButton() {
+                JButton button = new JButton();
+                button.setPreferredSize(new Dimension(0, 0));
+                button.setMinimumSize(new Dimension(0, 0));
+                button.setMaximumSize(new Dimension(0, 0));
+                return button;
+            }
+        });
     }
 }

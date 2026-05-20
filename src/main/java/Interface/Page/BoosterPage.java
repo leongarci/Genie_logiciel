@@ -438,7 +438,7 @@ public class BoosterPage extends JPanel implements MouseListener, MouseMotionLis
         }
 
         Booster booster = new Booster(regions[indexRegion]);
-        List<Carte> cartesTirees = booster.ouvrirBooster(anInterface.getUser(), regions[indexRegion]);
+        List<Carte> cartesTirees = booster.ouvrirBooster(anInterface.getUser());
 
         if (cartesTirees != null && !cartesTirees.isEmpty()) {
             this.pulledCards = cartesTirees;

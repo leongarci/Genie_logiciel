@@ -5,6 +5,6 @@ package config;
  */
 public class Config {
 
-    public static final int NBR_BOOSTER_MAX = 50;
+    public static final int NBR_BOOSTER_MAX = 3;
 
 }

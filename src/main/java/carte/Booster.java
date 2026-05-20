@@ -64,11 +64,13 @@ public class Booster {
     // Génère les cartes du booster pour une région spécifique
     private void genererCartes(EnumRegion region) {
         for (int i = 0; i < 5; i++) {
-            Carte c = museeDAO.getRandomCarteByRegion(region.getNomAffichage());
-            System.out.println("Booster région" + c.toString());
+            Carte c = museeDAO.getRandomCarteByRegion(region);
             if (c != null) {
+                System.out.println("Booster région" + c);
                 cartes.add(c);
                 idsTires.add(c.getIdentifiant());
+            } else {
+                System.err.println("Aucune carte trouvée pour la région : " + region.getNomAffichage());
             }
         }
     }

@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import auth.DatabaseConfig;
 import carte.Carte;
@@ -58,41 +59,59 @@ public class MuseeDAO {
         return null;
     }
 
-    // Récupère une carte aléatoire par région
-    public Carte getRandomCarteByRegion(String region) {
+    public Carte getRandomCarteByRegion(EnumRegion enumRegion) {
+        if (enumRegion.isDrom()) {
+            Carte c = fetchCarteDrom(enumRegion.getDepartementBDD());
+            if (c == null) {
+                System.err.println("Aucune carte pour " + enumRegion.getNomAffichage() + ", fallback tous les DROM.");
+                c = fetchCarteDrom(null);
+            }
+            return c;
+        }
+
         String sql = "SELECT identifiant, nom_officiel, domaine_thematique, histoire, adresse, ville, interet, total "
                 + "FROM public.musee WHERE region = ? ORDER BY RANDOM() LIMIT 1";
-
-        try (Connection conn = DatabaseConfig.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, region);
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, enumRegion.getRegionBDD());
             try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    int totalVisiteurs = rs.getInt("total");
-                    Rarete rareteCalculee;
-                    if (rs.wasNull() || totalVisiteurs < 20000) {
-                        rareteCalculee = Rarete.COMMUN;
-                    } else if (totalVisiteurs < 100000) {
-                        rareteCalculee = Rarete.RARE;
-                    } else if (totalVisiteurs < 1000000) {
-                        rareteCalculee = Rarete.EPIQUE;
-                    } else {
-                        rareteCalculee = Rarete.LEGENDAIRE;
-                    }
-                    return new Carte(
-                            rs.getInt("identifiant"),
-                            rs.getString("nom_officiel"),
-                            rs.getString("ville"),
-                            rs.getString("domaine_thematique"),
-                            rs.getString("histoire"),
-                            rs.getString("adresse"),
-                            rs.getString("interet"),
-                            rareteCalculee
-                    );
-                }
+                if (rs.next()) return mapCarte(rs);
             }
         } catch (SQLException e) {
-            System.err.println("Erreur MuseeDAO (getRandomCarteByRegion) : " + e.getMessage());
+            System.err.println("Erreur getRandomCarteByRegion : " + e.getMessage());
         }
         return null;
     }
+
+    private Carte fetchCarteDrom(String departement) {
+        String sql = "SELECT identifiant, nom_officiel, domaine_thematique, histoire, adresse, ville, interet, total "
+                + "FROM public.musee WHERE region = 'DROM'"
+                + (departement != null ? " AND departement = ?" : "")
+                + " ORDER BY RANDOM() LIMIT 1";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            if (departement != null) pstmt.setString(1, departement);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return mapCarte(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur fetchCarteDrom : " + e.getMessage());
+        }
+        return null;
+    }
+
+    private Carte mapCarte(ResultSet rs) throws SQLException {
+        int total = rs.getInt("total");
+        Rarete r;
+        if (rs.wasNull() || total < 20_000)  r = Rarete.COMMUN;
+        else if (total < 100_000)             r = Rarete.RARE;
+        else if (total < 1_000_000)           r = Rarete.EPIQUE;
+        else                                  r = Rarete.LEGENDAIRE;
+        return new Carte(
+                rs.getInt("identifiant"), rs.getString("nom_officiel"), rs.getString("ville"),
+                rs.getString("domaine_thematique"), rs.getString("histoire"),
+                rs.getString("adresse"), rs.getString("interet"), r
+        );
+    }
+
 }
